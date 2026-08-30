@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Appointment - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+    <div class="brand">
+        <span class="brand-name">SUNRISE DENTAL</span>
+        <span class="brand-tagline">Clinic Management System</span>
+    </div>
+    <div class="staff-info">
+        <span>Staff: <strong id="staffName">...</strong></span>
+        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
+    </div>
+</header>
+
+<main class="page-container narrow">
+    <div class="page-header">
+        <a class="back-link" href="dashboard.html">&larr; Back to Dashboard</a>
+        <h1>Find Appointment</h1>
+        <p>Search by appointment number.</p>
+    </div>
+
+    <div class="card">
+        <form id="searchForm" novalidate>
+            <div class="form-group">
+                <label for="appointmentNumber">Appointment Number</label>
+                <input type="text" id="appointmentNumber" name="appointmentNumber" required>
+                <p class="field-error" id="appointmentNumberError">Appointment number is required.</p>
+            </div>
+            <button type="submit" class="btn btn-primary" id="searchButton">Search</button>
+        </form>
+    </div>
+
+    <div id="searchAlert" class="alert alert-error" role="alert"></div>
+
+    <div id="resultCard" class="card" style="display:none;">
+        <h2 class="section-title">Appointment Details</h2>
+        <p>
+            Appointment # <strong id="resultNumber"></strong>
+            &nbsp;<span id="resultStatus"></span>
+        </p>
+
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Patient</div>
+                <div class="detail-value" id="resultPatient"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Contact Number</div>
+                <div class="detail-value" id="resultContact"></div>
+            </div>
+            <div class="detail-item" style="grid-column: 1 / -1;">
+                <div class="detail-label">Address</div>
+                <div class="detail-value" id="resultAddress"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Dentist</div>
+                <div class="detail-value" id="resultDentist"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Treatment</div>
+                <div class="detail-value" id="resultTreatment"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Date</div>
+                <div class="detail-value" id="resultDate"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Time</div>
+                <div class="detail-value" id="resultTime"></div>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <a href="dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+            <button type="button" class="btn btn-primary" id="generateBillBtn">Generate Bill</button>
+        </div>
+    </div>
+</main>
+
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/guard.js"></script>
+<script src="../js/search.js"></script>
+</body>
+</html>

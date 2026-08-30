@@ -1,0 +1,58 @@
+/* Sunrise Dental - login page layout (uses tokens from style.css) */
+
+.login-shell {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: linear-gradient(180deg, var(--color-primary-light) 0%, var(--color-bg) 45%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2.25rem 2rem;
+}
+
+.login-brand {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.login-brand .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+}
+
+.login-brand .brand-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--color-primary-dark);
+}
+
+.login-brand .brand-tagline {
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+    margin-top: 0.15rem;
+}
+
+.login-footer-note {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}

@@ -3,15 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunrise Dental</title>
+    <title>Sunrise Dental - Login</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
 </head>
-<script src="js/script.js"></script>
 <body>
 
-<h1>Welcome to Sunrise Dental</h1>
+<div class="login-shell">
+    <div class="login-card">
+        <div class="login-brand">
+            <div class="brand-mark" aria-hidden="true">+</div>
+            <div class="brand-name">SUNRISE DENTAL</div>
+            <div class="brand-tagline">Clinic Management System</div>
+        </div>
 
-<p>Sunrise Dental Assessment Management System</p>
+        <div id="loginAlert" class="alert alert-error" role="alert"></div>
 
+        <form id="loginForm" novalidate>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" autocomplete="username" required>
+                <p class="field-error" id="usernameError">Username is required.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-field">
+                    <input type="password" id="password" name="password" autocomplete="current-password" required>
+                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">Show</button>
+                </div>
+                <p class="field-error" id="passwordError">Password is required.</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="loginButton">Login</button>
+        </form>
+
+        <p class="login-footer-note">Authorized clinic staff only.</p>
+    </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/login.js"></script>
 </body>
 </html>

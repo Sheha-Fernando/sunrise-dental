@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+    <div class="brand">
+        <span class="brand-name">SUNRISE DENTAL</span>
+        <span class="brand-tagline">Clinic Management System</span>
+    </div>
+    <div class="staff-info">
+        <span>Staff: <strong id="staffName">...</strong></span>
+        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-header">
+        <a class="back-link" href="dashboard.html">&larr; Back to Dashboard</a>
+        <h1>Help</h1>
+        <p>Step-by-step instructions for new front-desk staff.</p>
+    </div>
+
+    <div class="card">
+        <section class="help-section">
+            <h3>Logging in</h3>
+            <ol>
+                <li>Enter your username.</li>
+                <li>Enter your password.</li>
+                <li>Click Login.</li>
+            </ol>
+        </section>
+
+        <section class="help-section">
+            <h3>Registering an appointment</h3>
+            <ol>
+                <li>Select <strong>New Appointment</strong> from the dashboard.</li>
+                <li>Enter the patient's name, contact number and address.</li>
+                <li>Enter a unique appointment number.</li>
+                <li>Select a dentist.</li>
+                <li>Select a treatment.</li>
+                <li>Select the appointment date and time.</li>
+                <li>Click <strong>Register Appointment</strong>.</li>
+                <li>Note down the appointment number - the patient will need it for billing.</li>
+            </ol>
+        </section>
+
+        <section class="help-section">
+            <h3>Finding an appointment</h3>
+            <ol>
+                <li>Select <strong>Find Appointment</strong> from the dashboard.</li>
+                <li>Enter the appointment number.</li>
+                <li>Click <strong>Search</strong>.</li>
+            </ol>
+        </section>
+
+        <section class="help-section">
+            <h3>Generating a bill</h3>
+            <ol>
+                <li>Select <strong>Billing</strong> from the dashboard.</li>
+                <li>Enter the appointment number and click <strong>Find Appointment</strong>.</li>
+                <li>Click <strong>Generate Bill</strong>.</li>
+                <li>Review the consultation fee, treatment cost and total.</li>
+                <li>Click <strong>Print Bill</strong> to print the receipt.</li>
+            </ol>
+        </section>
+
+        <section class="help-section">
+            <h3>If the dentist is already booked</h3>
+            <p>
+                If the system shows "This dentist is already booked at this date and time",
+                choose a different time or a different dentist for that appointment.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>Logging out</h3>
+            <p>Click <strong>Logout</strong> at the top of any page when you are finished.</p>
+        </section>
+    </div>
+</main>
+
+<script src="../js/api.js"></script>
+<script src="../js/guard.js"></script>
+</body>
+</html>
