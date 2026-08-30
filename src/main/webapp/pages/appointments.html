@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1 id="pageTitle">Appointments</h1>
+            <p class="page-subtitle">Manage today's appointments and clinic activity.</p>
+        </div>
+        <div class="page-header-actions" id="headerActions"></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="toolbar-search">
+            <input type="search" id="filterSearch" placeholder="Search by patient name...">
+        </div>
+        <input type="date" id="filterDate">
+        <select id="filterStatus">
+            <option value="">All statuses</option>
+            <option value="SCHEDULED">Scheduled</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+        </select>
+        <button type="button" class="btn btn-secondary btn-sm" id="clearFiltersBtn">Clear</button>
+    </div>
+
+    <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading appointments...</div></div>
+</template>
+
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/appointments.js"></script>
+</body>
+</html>

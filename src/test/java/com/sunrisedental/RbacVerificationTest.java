@@ -99,7 +99,7 @@ class RbacVerificationTest {
     @Order(7)
     void testInactiveUserCannotLogin() {
         User created = staffService.createStaff("RBAC Test Receptionist", "rbactest.inactive",
-                "Temp@12345", UserRole.RECEPTIONIST, null);
+                "Temp@12345", UserRole.RECEPTIONIST, null, null);
         staffService.updateActiveStatus(created.getUserId(), false);
 
         BusinessException ex = assertThrows(BusinessException.class,
@@ -202,7 +202,7 @@ class RbacVerificationTest {
     @Order(16)
     void testCreateReceptionistSucceeds() {
         User user = staffService.createStaff("RBAC Test Reception", "rbactest.reception",
-                "Temp@12345", UserRole.RECEPTIONIST, null);
+                "Temp@12345", UserRole.RECEPTIONIST, null, null);
         assertEquals(UserRole.RECEPTIONIST, user.getRole());
         assertNull(user.getDentistId());
     }
@@ -211,7 +211,7 @@ class RbacVerificationTest {
     @Order(17)
     void testCreateDentistSucceeds() {
         User user = staffService.createStaff("RBAC Test Dentist", "rbactest.dentist",
-                "Temp@12345", UserRole.DENTIST, 1);
+                "Temp@12345", UserRole.DENTIST, 1, null);
         assertEquals(UserRole.DENTIST, user.getRole());
         assertEquals(1, user.getDentistId());
     }
@@ -220,7 +220,7 @@ class RbacVerificationTest {
     @Order(18)
     void testDuplicateUsernameRejected() {
         BusinessException ex = assertThrows(BusinessException.class, () -> staffService.createStaff(
-                "Another Name", "rbactest.reception", "Temp@12345", UserRole.RECEPTIONIST, null));
+                "Another Name", "rbactest.reception", "Temp@12345", UserRole.RECEPTIONIST, null, null));
         assertEquals("Username is already in use.", ex.getMessage());
     }
 
@@ -228,7 +228,7 @@ class RbacVerificationTest {
     @Order(19)
     void testDentistWithoutDentistIdRejected() {
         BusinessException ex = assertThrows(BusinessException.class, () -> staffService.createStaff(
-                "No Dentist Link", "rbactest.dentist.nolink", "Temp@12345", UserRole.DENTIST, null));
+                "No Dentist Link", "rbactest.dentist.nolink", "Temp@12345", UserRole.DENTIST, null, null));
         assertEquals("Dentist ID is required for a dentist account.", ex.getMessage());
     }
 
@@ -236,7 +236,7 @@ class RbacVerificationTest {
     @Order(20)
     void testNonDentistWithDentistIdRejected() {
         BusinessException ex = assertThrows(BusinessException.class, () -> staffService.createStaff(
-                "Bad Admin Link", "rbactest.admin.badlink", "Temp@12345", UserRole.ADMIN, 1));
+                "Bad Admin Link", "rbactest.admin.badlink", "Temp@12345", UserRole.ADMIN, 1, null));
         assertEquals("Dentist ID must not be provided for this role.", ex.getMessage());
     }
 
@@ -244,7 +244,7 @@ class RbacVerificationTest {
     @Order(21)
     void testInvalidDentistAssociationRejected() {
         BusinessException ex = assertThrows(BusinessException.class, () -> staffService.createStaff(
-                "Bad Dentist Link", "rbactest.dentist.badlink", "Temp@12345", UserRole.DENTIST, 99999));
+                "Bad Dentist Link", "rbactest.dentist.badlink", "Temp@12345", UserRole.DENTIST, 99999, null));
         assertEquals("Selected dentist is not available.", ex.getMessage());
     }
 
@@ -252,7 +252,7 @@ class RbacVerificationTest {
     @Order(22)
     void testDeactivateUserSucceeds() {
         User user = staffService.createStaff("RBAC Test Deactivate", "rbactest.deactivate",
-                "Temp@12345", UserRole.BILLING, null);
+                "Temp@12345", UserRole.BILLING, null, null);
         User updated = staffService.updateActiveStatus(user.getUserId(), false);
         assertFalse(updated.isActive());
 
@@ -286,7 +286,7 @@ class RbacVerificationTest {
         try {
             int adminId = userDAO.findByUsername("admin").orElseThrow().getUserId();
             BusinessException ex = assertThrows(BusinessException.class,
-                    () -> staffService.updateRole(adminId, UserRole.RECEPTIONIST, null));
+                    () -> staffService.updateRole(adminId, UserRole.RECEPTIONIST, null, null));
             assertEquals("The system must have at least one active administrator.", ex.getMessage());
         } finally {
             restoreAdminAccount();
@@ -297,9 +297,9 @@ class RbacVerificationTest {
     @Order(25)
     void testAdminProtectionDoesNotBlockWhenAnotherAdminExists() {
         User secondAdmin = staffService.createStaff("RBAC Test Admin 2", "rbactest.admin2",
-                "Temp@12345", UserRole.ADMIN, null);
+                "Temp@12345", UserRole.ADMIN, null, null);
         // With two active admins, demoting one of them (not the real seed admin) must succeed.
-        User demoted = staffService.updateRole(secondAdmin.getUserId(), UserRole.RECEPTIONIST, null);
+        User demoted = staffService.updateRole(secondAdmin.getUserId(), UserRole.RECEPTIONIST, null, null);
         assertEquals(UserRole.RECEPTIONIST, demoted.getRole());
     }
 

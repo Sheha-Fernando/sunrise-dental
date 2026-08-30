@@ -18,7 +18,7 @@ import java.util.Optional;
 public class UserDAO {
 
     private static final String SELECT_COLUMNS =
-            "user_id, username, password_hash, full_name, role, dentist_id, is_active, created_at ";
+            "user_id, username, password_hash, full_name, role, dentist_id, assigned_dentist_id, is_active, created_at ";
 
     public Optional<User> findByUsername(String username) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
@@ -82,26 +82,23 @@ public class UserDAO {
     }
 
     public int create(String username, String passwordHash, String fullName,
-                       UserRole role, Integer dentistId) throws SQLException {
+                       UserRole role, Integer dentistId, Integer assignedDentistId) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
-            return create(conn, username, passwordHash, fullName, role, dentistId);
+            return create(conn, username, passwordHash, fullName, role, dentistId, assignedDentistId);
         }
     }
 
     public int create(Connection conn, String username, String passwordHash, String fullName,
-                       UserRole role, Integer dentistId) throws SQLException {
-        String sql = "INSERT INTO users (username, password_hash, full_name, role, dentist_id) "
-                + "VALUES (?, ?, ?, ?, ?)";
+                       UserRole role, Integer dentistId, Integer assignedDentistId) throws SQLException {
+        String sql = "INSERT INTO users (username, password_hash, full_name, role, dentist_id, assigned_dentist_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, username);
             ps.setString(2, passwordHash);
             ps.setString(3, fullName);
             ps.setString(4, role.name());
-            if (dentistId != null) {
-                ps.setInt(5, dentistId);
-            } else {
-                ps.setNull(5, Types.INTEGER);
-            }
+            setNullableInt(ps, 5, dentistId);
+            setNullableInt(ps, 6, assignedDentistId);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -112,23 +109,29 @@ public class UserDAO {
         }
     }
 
-    public void updateRole(int userId, UserRole role, Integer dentistId) throws SQLException {
+    public void updateRole(int userId, UserRole role, Integer dentistId, Integer assignedDentistId) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
-            updateRole(conn, userId, role, dentistId);
+            updateRole(conn, userId, role, dentistId, assignedDentistId);
         }
     }
 
-    public void updateRole(Connection conn, int userId, UserRole role, Integer dentistId) throws SQLException {
-        String sql = "UPDATE users SET role = ?, dentist_id = ? WHERE user_id = ?";
+    public void updateRole(Connection conn, int userId, UserRole role, Integer dentistId, Integer assignedDentistId)
+            throws SQLException {
+        String sql = "UPDATE users SET role = ?, dentist_id = ?, assigned_dentist_id = ? WHERE user_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, role.name());
-            if (dentistId != null) {
-                ps.setInt(2, dentistId);
-            } else {
-                ps.setNull(2, Types.INTEGER);
-            }
-            ps.setInt(3, userId);
+            setNullableInt(ps, 2, dentistId);
+            setNullableInt(ps, 3, assignedDentistId);
+            ps.setInt(4, userId);
             ps.executeUpdate();
+        }
+    }
+
+    private void setNullableInt(PreparedStatement ps, int index, Integer value) throws SQLException {
+        if (value != null) {
+            ps.setInt(index, value);
+        } else {
+            ps.setNull(index, Types.INTEGER);
         }
     }
 
@@ -173,6 +176,8 @@ public class UserDAO {
         user.setRole(UserRole.valueOf(rs.getString("role")));
         int dentistId = rs.getInt("dentist_id");
         user.setDentistId(rs.wasNull() ? null : dentistId);
+        int assignedDentistId = rs.getInt("assigned_dentist_id");
+        user.setAssignedDentistId(rs.wasNull() ? null : assignedDentistId);
         user.setActive(rs.getBoolean("is_active"));
         Timestamp createdAt = rs.getTimestamp("created_at");
         user.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);

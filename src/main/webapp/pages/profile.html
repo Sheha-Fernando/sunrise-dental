@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1>My Profile</h1>
+            <p class="page-subtitle">Your account information.</p>
+        </div>
+    </div>
+
+    <div class="card" style="max-width:520px;">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Full Name</div>
+                <div class="detail-value" id="profileFullName"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Username</div>
+                <div class="detail-value" id="profileUsername"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Role</div>
+                <div class="detail-value" id="profileRole"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script src="../js/api.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/profile.js"></script>
+</body>
+</html>

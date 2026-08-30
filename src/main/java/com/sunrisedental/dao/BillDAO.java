@@ -2,6 +2,7 @@ package com.sunrisedental.dao;
 
 import com.sunrisedental.db.DatabaseConfig;
 import com.sunrisedental.model.Bill;
+import com.sunrisedental.model.BillSummary;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -10,9 +11,55 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class BillDAO {
+
+    /** Recent bills for the billing list/dashboard, most recent first. */
+    public List<BillSummary> findRecent(int limit) throws SQLException {
+        String sql = "SELECT b.bill_id, a.appointment_number, p.patient_name, d.dentist_name, "
+                + "       b.total_amount, b.bill_date "
+                + "FROM bills b "
+                + "JOIN appointments a ON b.appointment_id = a.appointment_id "
+                + "JOIN patients p ON a.patient_id = p.patient_id "
+                + "JOIN dentists d ON a.dentist_id = d.dentist_id "
+                + "ORDER BY b.bill_date DESC "
+                + "LIMIT ?";
+        List<BillSummary> summaries = new ArrayList<>();
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BillSummary summary = new BillSummary();
+                    summary.setBillId(rs.getInt("bill_id"));
+                    summary.setAppointmentNumber(rs.getString("appointment_number"));
+                    summary.setPatientName(rs.getString("patient_name"));
+                    summary.setDentistName(rs.getString("dentist_name"));
+                    summary.setTotalAmount(rs.getBigDecimal("total_amount"));
+                    Timestamp billDate = rs.getTimestamp("bill_date");
+                    summary.setBillDate(billDate != null ? billDate.toLocalDateTime() : null);
+                    summaries.add(summary);
+                }
+            }
+        }
+        return summaries;
+    }
+
+    /** Sum of bill totals for a single calendar day (for "Today's Revenue"). */
+    public BigDecimal sumTotalForDate(java.time.LocalDate date) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(total_amount), 0) FROM bills WHERE DATE(bill_date) = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, java.sql.Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getBigDecimal(1);
+            }
+        }
+    }
 
     public int create(Bill bill) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treatments - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<script>window.PAGE_ROLES = ["ADMIN"];</script>
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1>Treatments</h1>
+            <p class="page-subtitle">Treatment types and pricing used across appointments and billing.</p>
+        </div>
+    </div>
+    <div class="alert alert-info visible" style="margin-bottom:1.25rem;">
+        Treatment pricing is read-only in this version. Changing prices requires a database update -
+        there is currently no screen for editing prices.
+    </div>
+    <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading treatments...</div></div>
+</template>
+
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/treatments.js"></script>
+</body>
+</html>

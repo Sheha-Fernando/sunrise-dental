@@ -46,7 +46,7 @@ public class StaffService {
     }
 
     public User createStaff(String fullName, String username, String plainPassword,
-                             UserRole role, Integer dentistId) {
+                             UserRole role, Integer dentistId, Integer assignedDentistId) {
         if (fullName == null || fullName.isBlank()) {
             throw new BusinessException("Full name is required.");
         }
@@ -57,6 +57,7 @@ public class StaffService {
             throw new BusinessException("Password is required.");
         }
         validateRoleDentistPair(role, dentistId);
+        validateAssignedDentistPair(role, assignedDentistId);
 
         try {
             if (userDAO.existsByUsername(username.trim())) {
@@ -66,7 +67,7 @@ public class StaffService {
             String hash = PasswordUtil.hash(plainPassword);
             int userId;
             try {
-                userId = userDAO.create(username.trim(), hash, fullName.trim(), role, dentistId);
+                userId = userDAO.create(username.trim(), hash, fullName.trim(), role, dentistId, assignedDentistId);
             } catch (SQLIntegrityConstraintViolationException e) {
                 throw new BusinessException("Username is already in use.");
             }
@@ -77,8 +78,9 @@ public class StaffService {
         }
     }
 
-    public User updateRole(int userId, UserRole newRole, Integer newDentistId) {
+    public User updateRole(int userId, UserRole newRole, Integer newDentistId, Integer newAssignedDentistId) {
         validateRoleDentistPair(newRole, newDentistId);
+        validateAssignedDentistPair(newRole, newAssignedDentistId);
         try {
             User target = userDAO.findById(userId)
                     .orElseThrow(() -> new BusinessException("Staff member not found."));
@@ -87,7 +89,7 @@ public class StaffService {
                 ensureNotLastActiveAdmin();
             }
 
-            userDAO.updateRole(userId, newRole, newDentistId);
+            userDAO.updateRole(userId, newRole, newDentistId, newAssignedDentistId);
             return userDAO.findById(userId).orElseThrow(() -> new BusinessException("Staff member not found."));
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Failed to update staff role", e);
@@ -135,6 +137,26 @@ public class StaffService {
             }
         } else if (dentistId != null) {
             throw new BusinessException("Dentist ID must not be provided for this role.");
+        }
+    }
+
+    private void validateAssignedDentistPair(UserRole role, Integer assignedDentistId) {
+        if (role == UserRole.CLINICAL_ASSISTANT) {
+            if (assignedDentistId == null) {
+                throw new BusinessException("An assigned dentist is required for a Clinical Assistant account.");
+            }
+            try {
+                Dentist dentist = dentistDAO.findById(assignedDentistId)
+                        .orElseThrow(() -> new BusinessException("Selected dentist is not available."));
+                if (!dentist.isActive()) {
+                    throw new BusinessException("Selected dentist is not available.");
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.SEVERE, "Failed to validate assigned dentist", e);
+                throw new BusinessException("Unable to validate assigned dentist right now.");
+            }
+        } else if (assignedDentistId != null) {
+            throw new BusinessException("Assigned dentist is only applicable to Clinical Assistant accounts.");
         }
     }
 }

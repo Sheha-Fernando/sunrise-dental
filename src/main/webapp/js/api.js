@@ -78,5 +78,13 @@ const Api = (() => {
         });
     }
 
-    return { get, post, ApiError, ROOT, PAGES };
+    function put(path) {
+        // The backend's PUT endpoints (e.g. /api/staff/{id}) take their
+        // fields on the query string, since the Servlet API only
+        // auto-parses form-encoded bodies for POST, not PUT - so `path`
+        // is expected to already include them, e.g. "/staff/5?active=false".
+        return request(path, { method: "PUT" });
+    }
+
+    return { get, post, put, ApiError, ROOT, PAGES };
 })();

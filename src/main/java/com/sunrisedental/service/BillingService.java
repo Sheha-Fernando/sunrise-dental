@@ -6,11 +6,14 @@ import com.sunrisedental.dao.TreatmentDAO;
 import com.sunrisedental.exception.BusinessException;
 import com.sunrisedental.model.Appointment;
 import com.sunrisedental.model.Bill;
+import com.sunrisedental.model.BillSummary;
 import com.sunrisedental.model.Treatment;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,6 +74,24 @@ public class BillingService {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Failed to generate bill", e);
             throw new BusinessException("Unable to generate bill.");
+        }
+    }
+
+    public List<BillSummary> listRecentBills(int limit) {
+        try {
+            return billDAO.findRecent(limit);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Failed to list recent bills", e);
+            throw new BusinessException("Unable to retrieve bills right now.");
+        }
+    }
+
+    public BigDecimal todaysRevenue() {
+        try {
+            return billDAO.sumTotalForDate(LocalDate.now());
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Failed to compute today's revenue", e);
+            throw new BusinessException("Unable to retrieve revenue right now.");
         }
     }
 

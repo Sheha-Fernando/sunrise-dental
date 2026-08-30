@@ -16,6 +16,7 @@ import com.sunrisedental.model.UserRole;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,17 +70,48 @@ public class AppointmentService {
     }
 
     /**
-     * A DENTIST user may only access appointments assigned to their own
-     * dentist record - never another dentist's patients. Every other role
-     * granted access to this endpoint (ADMIN/RECEPTIONIST/BILLING per the
-     * authorization matrix) passes through unrestricted.
+     * A DENTIST may only access their own appointments; a CLINICAL_ASSISTANT
+     * is scoped the same way, but to their assigned dentist rather than a
+     * dentist_id of their own. In both cases the caller (servlet) resolves
+     * the correct session value into scopeDentistId before calling this -
+     * this method just enforces "does the appointment's dentist match the
+     * scope this session is limited to". Every other role granted access to
+     * this endpoint (ADMIN/RECEPTIONIST/BILLING) passes through unrestricted.
      */
-    public void verifyDentistOwnership(Appointment appointment, UserRole role, Integer sessionDentistId) {
-        if (role != UserRole.DENTIST) {
+    public void verifyDentistOwnership(Appointment appointment, UserRole role, Integer scopeDentistId) {
+        if (role != UserRole.DENTIST && role != UserRole.CLINICAL_ASSISTANT) {
             return;
         }
-        if (sessionDentistId == null || appointment.getDentist().getDentistId() != sessionDentistId) {
+        if (scopeDentistId == null || appointment.getDentist().getDentistId() != scopeDentistId) {
             throw new ForbiddenException("You are not authorized to access this appointment.");
+        }
+    }
+
+    /**
+     * Schedule/dashboard listing. A DENTIST or CLINICAL_ASSISTANT session is
+     * always forced to its resolved scopeDentistId, regardless of any
+     * dentistId the caller passed in - this is the server-side enforcement
+     * of data isolation for the list endpoint (the single-appointment
+     * endpoint enforces it via verifyDentistOwnership instead).
+     */
+    public List<Appointment> listAppointments(LocalDate date, com.sunrisedental.model.AppointmentStatus status,
+                                               Integer requestedDentistId, UserRole role, Integer scopeDentistId) {
+        boolean isScopedRole = (role == UserRole.DENTIST || role == UserRole.CLINICAL_ASSISTANT);
+        Integer effectiveDentistId = isScopedRole ? scopeDentistId : requestedDentistId;
+        try {
+            return appointmentDAO.findAll(date, status, effectiveDentistId);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Failed to list appointments", e);
+            throw new BusinessException("Unable to retrieve appointments right now.");
+        }
+    }
+
+    public List<Appointment> listByPatient(int patientId) {
+        try {
+            return appointmentDAO.findByPatientId(patientId);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Failed to list appointments for patient", e);
+            throw new BusinessException("Unable to retrieve appointment history right now.");
         }
     }
 

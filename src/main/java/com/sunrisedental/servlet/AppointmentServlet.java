@@ -3,6 +3,7 @@ package com.sunrisedental.servlet;
 import com.sunrisedental.exception.BusinessException;
 import com.sunrisedental.exception.ForbiddenException;
 import com.sunrisedental.model.Appointment;
+import com.sunrisedental.model.AppointmentStatus;
 import com.sunrisedental.model.UserRole;
 import com.sunrisedental.service.AppointmentService;
 import com.sunrisedental.service.NewAppointmentRequest;
@@ -18,15 +19,19 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Test API for appointment registration and search:
- *   POST /api/appointments               - create
- *   GET  /api/appointments/{number}       - search by appointment number
+ * API for appointment registration, search and scheduling:
+ *   POST /api/appointments                    - create
+ *   GET  /api/appointments/{number}            - search by appointment number
+ *   GET  /api/appointments?date=&status=&dentistId= - schedule/dashboard listing
+ *        (a DENTIST session is always forced to their own dentistId)
  */
 @WebServlet("/api/appointments/*")
 public class AppointmentServlet extends HttpServlet {
@@ -84,8 +89,9 @@ public class AppointmentServlet extends HttpServlet {
             throws ServletException, IOException {
         resp.setContentType("application/json");
         String pathInfo = req.getPathInfo();
+
         if (pathInfo == null || pathInfo.length() <= 1) {
-            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Appointment number is required.");
+            listAppointments(req, resp);
             return;
         }
         String appointmentNumber = pathInfo.substring(1);
@@ -96,7 +102,7 @@ public class AppointmentServlet extends HttpServlet {
             // DENTIST users may only see their own appointments - never
             // another dentist's patient data, even via a direct API call.
             appointmentService.verifyDentistOwnership(appointment,
-                    AuthorizationUtil.currentRole(req), AuthorizationUtil.currentDentistId(req));
+                    AuthorizationUtil.currentRole(req), AuthorizationUtil.currentScopeDentistId(req));
 
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");
@@ -110,6 +116,48 @@ public class AppointmentServlet extends HttpServlet {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Unexpected error searching for appointment", e);
             writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to search for appointment right now.");
+        }
+    }
+
+    private void listAppointments(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        try {
+            LocalDate date = parseOptionalDate(req.getParameter("date"));
+            AppointmentStatus status = parseOptionalStatus(req.getParameter("status"));
+            String dentistIdParam = req.getParameter("dentistId");
+            Integer dentistId = (dentistIdParam == null || dentistIdParam.isBlank())
+                    ? null : Integer.valueOf(dentistIdParam);
+
+            List<Appointment> appointments = appointmentService.listAppointments(date, status, dentistId,
+                    AuthorizationUtil.currentRole(req), AuthorizationUtil.currentScopeDentistId(req));
+
+            List<Map<String, Object>> body = new ArrayList<>();
+            for (Appointment appointment : appointments) {
+                body.add(toJson(appointment));
+            }
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(JsonUtil.write(body));
+        } catch (BusinessException e) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (NumberFormatException | DateTimeParseException e) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid request data.");
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Unexpected error listing appointments", e);
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to retrieve appointments right now.");
+        }
+    }
+
+    private LocalDate parseOptionalDate(String value) {
+        return (value == null || value.isBlank()) ? null : LocalDate.parse(value);
+    }
+
+    private AppointmentStatus parseOptionalStatus(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return AppointmentStatus.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("Invalid appointment status.");
         }
     }
 

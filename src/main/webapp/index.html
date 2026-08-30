@@ -3,42 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunrise Dental - Login</title>
+    <title>Sunrise Dental - Sign In</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
 
 <div class="login-shell">
-    <div class="login-card">
-        <div class="login-brand">
-            <div class="brand-mark" aria-hidden="true">+</div>
-            <div class="brand-name">SUNRISE DENTAL</div>
-            <div class="brand-tagline">Clinic Management System</div>
+    <div class="login-visual" aria-hidden="true">
+        <div class="visual-content">
+            <div class="visual-mark">+</div>
+            <h1>Sunrise Dental</h1>
+            <div class="visual-tagline">Clinic Management System</div>
+            <div class="visual-quote">
+                "Centralized scheduling and records so every appointment,
+                patient and bill is accurate the first time."
+            </div>
         </div>
+    </div>
 
-        <div id="loginAlert" class="alert alert-error" role="alert"></div>
+    <div class="login-form-side">
+        <div class="login-card">
+            <h2>Welcome back</h2>
+            <p class="login-subtitle">Sign in to continue.</p>
 
-        <form id="loginForm" novalidate>
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" autocomplete="username" required>
-                <p class="field-error" id="usernameError">Username is required.</p>
-            </div>
+            <div id="loginAlert" class="alert alert-error" role="alert"></div>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-field">
-                    <input type="password" id="password" name="password" autocomplete="current-password" required>
-                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">Show</button>
+            <form id="loginForm" novalidate>
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" autocomplete="username" required>
+                    <p class="field-error" id="usernameError">Username is required.</p>
                 </div>
-                <p class="field-error" id="passwordError">Password is required.</p>
-            </div>
 
-            <button type="submit" class="btn btn-primary btn-block" id="loginButton">Login</button>
-        </form>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-field">
+                        <input type="password" id="password" name="password" autocomplete="current-password" required>
+                        <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">Show</button>
+                    </div>
+                    <p class="field-error" id="passwordError">Password is required.</p>
+                </div>
 
-        <p class="login-footer-note">Authorized clinic staff only.</p>
+                <button type="submit" class="btn btn-primary btn-block" id="loginButton">Sign In</button>
+            </form>
+
+            <p class="login-footer-note">Authorized clinic staff only. Contact your administrator for access.</p>
+        </div>
     </div>
 </div>
 

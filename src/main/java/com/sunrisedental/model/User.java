@@ -10,6 +10,7 @@ public class User {
     private String fullName;
     private UserRole role;
     private Integer dentistId;
+    private Integer assignedDentistId;
     private boolean active;
     private LocalDateTime createdAt;
 
@@ -59,6 +60,14 @@ public class User {
 
     public void setDentistId(Integer dentistId) {
         this.dentistId = dentistId;
+    }
+
+    public Integer getAssignedDentistId() {
+        return assignedDentistId;
+    }
+
+    public void setAssignedDentistId(Integer assignedDentistId) {
+        this.assignedDentistId = assignedDentistId;
     }
 
     public boolean isActive() {

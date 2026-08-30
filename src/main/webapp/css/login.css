@@ -3,56 +3,104 @@
 .login-shell {
     min-height: 100vh;
     display: flex;
+}
+
+.login-visual {
+    flex: 1.1;
+    background: var(--color-text);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-visual::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg, rgba(184, 149, 82, 0.14), transparent 55%),
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 26px);
+}
+
+.login-visual .visual-content {
+    position: relative;
+    max-width: 380px;
+}
+
+.login-visual .visual-mark {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(184, 149, 82, 0.6);
+    border-radius: 50%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
-    background: linear-gradient(180deg, var(--color-primary-light) 0%, var(--color-bg) 45%);
+    color: var(--color-accent);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.login-visual h1 {
+    color: #fff;
+    font-size: 1.6rem;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.4rem;
+}
+
+.login-visual .visual-tagline {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.92rem;
+    margin-bottom: 2.5rem;
+}
+
+.login-visual .visual-quote {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+    border-left: 2px solid var(--color-accent);
+    padding-left: 1rem;
+}
+
+.login-form-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--color-bg);
 }
 
 .login-card {
     width: 100%;
-    max-width: 380px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 2.25rem 2rem;
+    max-width: 340px;
 }
 
-.login-brand {
-    text-align: center;
-    margin-bottom: 1.75rem;
+.login-card h2 {
+    font-size: 1.25rem;
 }
 
-.login-brand .brand-mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--color-primary-light);
-    color: var(--color-primary-dark);
-    font-size: 1.4rem;
-    margin-bottom: 0.75rem;
-}
-
-.login-brand .brand-name {
-    font-size: 1.3rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    color: var(--color-primary-dark);
-}
-
-.login-brand .brand-tagline {
-    font-size: 0.88rem;
+.login-card .login-subtitle {
     color: var(--color-text-muted);
-    margin-top: 0.15rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.75rem;
 }
 
 .login-footer-note {
     text-align: center;
     margin-top: 1.5rem;
     font-size: 0.8rem;
-    color: var(--color-text-muted);
+    color: var(--color-text-faint);
+}
+
+@media (max-width: 860px) {
+    .login-visual {
+        display: none;
+    }
+
+    .login-form-side {
+        background: var(--color-surface);
+    }
 }

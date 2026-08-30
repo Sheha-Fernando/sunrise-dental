@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<script>window.PAGE_ROLES = ["ADMIN"];</script>
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1>Staff</h1>
+            <p class="page-subtitle">Manage clinic staff accounts and roles.</p>
+        </div>
+        <div class="page-header-actions">
+            <button type="button" class="btn btn-primary" id="openAddStaffBtn">+ Add Staff</button>
+        </div>
+    </div>
+
+    <div id="staffAlert" class="alert alert-error" role="alert"></div>
+    <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading staff...</div></div>
+</template>
+
+<div class="modal-overlay" id="staffModalOverlay">
+    <div class="modal">
+        <button type="button" class="modal-close" id="closeStaffModal" aria-label="Close">&times;</button>
+        <h2>Add Staff</h2>
+        <div id="addStaffAlert" class="alert alert-error" role="alert"></div>
+        <form id="addStaffForm" novalidate>
+            <div class="form-group">
+                <label for="staffFullName">Full Name <span aria-hidden="true">*</span></label>
+                <input type="text" id="staffFullName" required>
+                <p class="field-error" id="staffFullNameError">Full name is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="staffUsername">Username <span aria-hidden="true">*</span></label>
+                <input type="text" id="staffUsername" required>
+                <p class="field-error" id="staffUsernameError">Username is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="staffPassword">Password <span aria-hidden="true">*</span></label>
+                <input type="password" id="staffPassword" required>
+                <p class="field-error" id="staffPasswordError">Password is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="staffRole">Role <span aria-hidden="true">*</span></label>
+                <select id="staffRole" required>
+                    <option value="RECEPTIONIST">Front Desk Reception</option>
+                    <option value="DENTIST">Dentist</option>
+                    <option value="CLINICAL_ASSISTANT">Clinical Assistant</option>
+                    <option value="BILLING">Billing Staff</option>
+                    <option value="ADMIN">Administrator</option>
+                </select>
+            </div>
+            <div class="form-group" id="staffDentistGroup" style="display:none;">
+                <label for="staffDentistId">Dentist <span aria-hidden="true">*</span></label>
+                <select id="staffDentistId">
+                    <option value="">Loading dentists...</option>
+                </select>
+                <p class="field-error" id="staffDentistIdError">Please select a dentist.</p>
+            </div>
+            <div class="form-group" id="staffAssignedDentistGroup" style="display:none;">
+                <label for="staffAssignedDentistId">Assigned Dentist <span aria-hidden="true">*</span></label>
+                <select id="staffAssignedDentistId">
+                    <option value="">Loading dentists...</option>
+                </select>
+                <p class="field-error" id="staffAssignedDentistIdError">Please select an assigned dentist.</p>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn btn-secondary" id="cancelAddStaffBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="addStaffSubmitBtn">Create Staff Account</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="roleModalOverlay">
+    <div class="modal">
+        <button type="button" class="modal-close" id="closeRoleModal" aria-label="Close">&times;</button>
+        <h2>Change Role</h2>
+        <div id="roleAlert" class="alert alert-error" role="alert"></div>
+        <form id="roleForm" novalidate>
+            <div class="form-group">
+                <label for="roleSelect">Role</label>
+                <select id="roleSelect">
+                    <option value="RECEPTIONIST">Front Desk Reception</option>
+                    <option value="DENTIST">Dentist</option>
+                    <option value="CLINICAL_ASSISTANT">Clinical Assistant</option>
+                    <option value="BILLING">Billing Staff</option>
+                    <option value="ADMIN">Administrator</option>
+                </select>
+            </div>
+            <div class="form-group" id="roleDentistGroup" style="display:none;">
+                <label for="roleDentistId">Dentist</label>
+                <select id="roleDentistId">
+                    <option value="">Loading dentists...</option>
+                </select>
+            </div>
+            <div class="form-group" id="roleAssignedDentistGroup" style="display:none;">
+                <label for="roleAssignedDentistId">Assigned Dentist</label>
+                <select id="roleAssignedDentistId">
+                    <option value="">Loading dentists...</option>
+                </select>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn btn-secondary" id="cancelRoleBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="roleSubmitBtn">Save Role</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="confirmModalOverlay">
+    <div class="modal" style="max-width:400px;">
+        <h2 id="confirmTitle">Are you sure?</h2>
+        <p id="confirmMessage" style="color:var(--color-text-muted);"></p>
+        <div class="btn-row">
+            <button type="button" class="btn btn-secondary" id="confirmCancelBtn">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/staff.js"></script>
+</body>
+</html>

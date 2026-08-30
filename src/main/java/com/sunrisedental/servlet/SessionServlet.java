@@ -38,6 +38,7 @@ public class SessionServlet extends HttpServlet {
         UserRole role = (UserRole) session.getAttribute("role");
         body.put("role", role != null ? role.name() : null);
         body.put("dentistId", session.getAttribute("dentistId"));
+        body.put("assignedDentistId", session.getAttribute("assignedDentistId"));
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.getWriter().write(JsonUtil.write(body));
     }

@@ -8,46 +8,37 @@
 </head>
 <body>
 
-<header class="app-header">
-    <div class="brand">
-        <span class="brand-name">SUNRISE DENTAL</span>
-        <span class="brand-tagline">Clinic Management System</span>
-    </div>
-    <div class="staff-info">
-        <span>Staff: <strong id="staffName">...</strong></span>
-        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
-    </div>
-</header>
+<div id="appShell"></div>
 
-<main class="page-container">
-    <h1>Welcome back</h1>
-    <p>Manage today's appointments and patient visits.</p>
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1 id="greeting">Welcome back</h1>
+            <p class="page-subtitle" id="dateLine"></p>
+        </div>
+    </div>
 
-    <nav class="menu-grid" aria-label="Main menu">
-        <a class="menu-card" href="appointment.html">
-            <span class="menu-icon" aria-hidden="true">📅</span>
-            <span class="menu-title">New Appointment</span>
-            <span class="menu-desc">Register a patient visit</span>
-        </a>
-        <a class="menu-card" href="search.html">
-            <span class="menu-icon" aria-hidden="true">🔎</span>
-            <span class="menu-title">Find Appointment</span>
-            <span class="menu-desc">Search by appointment number</span>
-        </a>
-        <a class="menu-card" href="billing.html">
-            <span class="menu-icon" aria-hidden="true">🧾</span>
-            <span class="menu-title">Billing</span>
-            <span class="menu-desc">Generate and print a bill</span>
-        </a>
-        <a class="menu-card" href="help.html">
-            <span class="menu-icon" aria-hidden="true">❓</span>
-            <span class="menu-title">Help</span>
-            <span class="menu-desc">Step-by-step instructions</span>
-        </a>
-    </nav>
-</main>
+    <div class="card-row" id="statCards"></div>
+
+    <div class="card" style="margin-top:1.25rem;">
+        <h2 class="section-title" id="scheduleTitle">Today's Schedule</h2>
+        <div id="scheduleContainer"><div class="loading-inline"><span class="spinner"></span> Loading schedule...</div></div>
+    </div>
+
+    <div class="card" id="secondaryCard" style="margin-top:1rem; display:none;">
+        <h2 class="section-title" id="secondaryTitle"></h2>
+        <div id="secondaryContainer"></div>
+    </div>
+
+    <div class="card" style="margin-top:1rem;">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="card-row" id="quickActions"></div>
+    </div>
+</template>
 
 <script src="../js/api.js"></script>
-<script src="../js/guard.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/dashboard.js"></script>
 </body>
 </html>

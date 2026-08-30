@@ -73,8 +73,11 @@ public class StaffServlet extends HttpServlet {
             String dentistIdParam = req.getParameter("dentistId");
             Integer dentistId = (dentistIdParam == null || dentistIdParam.isBlank())
                     ? null : Integer.valueOf(dentistIdParam);
+            String assignedDentistIdParam = req.getParameter("assignedDentistId");
+            Integer assignedDentistId = (assignedDentistIdParam == null || assignedDentistIdParam.isBlank())
+                    ? null : Integer.valueOf(assignedDentistIdParam);
 
-            User created = staffService.createStaff(fullName, username, password, role, dentistId);
+            User created = staffService.createStaff(fullName, username, password, role, dentistId, assignedDentistId);
 
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");
@@ -124,7 +127,10 @@ public class StaffServlet extends HttpServlet {
                 String dentistIdParam = req.getParameter("dentistId");
                 Integer dentistId = (dentistIdParam == null || dentistIdParam.isBlank())
                         ? null : Integer.valueOf(dentistIdParam);
-                updated = staffService.updateRole(userId, role, dentistId);
+                String assignedDentistIdParam = req.getParameter("assignedDentistId");
+                Integer assignedDentistId = (assignedDentistIdParam == null || assignedDentistIdParam.isBlank())
+                        ? null : Integer.valueOf(assignedDentistIdParam);
+                updated = staffService.updateRole(userId, role, dentistId, assignedDentistId);
             }
             if (activePart != null) {
                 updated = staffService.updateActiveStatus(userId, Boolean.parseBoolean(activePart));
@@ -155,6 +161,7 @@ public class StaffServlet extends HttpServlet {
         json.put("fullName", user.getFullName());
         json.put("role", user.getRole().name());
         json.put("dentistId", user.getDentistId());
+        json.put("assignedDentistId", user.getAssignedDentistId());
         json.put("active", user.isActive());
         return json;
     }

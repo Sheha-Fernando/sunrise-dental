@@ -3,6 +3,7 @@ package com.sunrisedental.servlet;
 import com.sunrisedental.exception.BusinessException;
 import com.sunrisedental.exception.ForbiddenException;
 import com.sunrisedental.model.Bill;
+import com.sunrisedental.model.BillSummary;
 import com.sunrisedental.model.UserRole;
 import com.sunrisedental.service.BillingService;
 import com.sunrisedental.util.AuthorizationUtil;
@@ -14,15 +15,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Test API for billing:
+ * API for billing:
  *   POST /api/bills?appointmentNumber=...  - generate a bill
  *   GET  /api/bills?appointmentNumber=...  - retrieve an existing bill
+ *   GET  /api/bills                        - recent bills (billing list/dashboard)
  */
 @WebServlet("/api/bills")
 public class BillServlet extends HttpServlet {
@@ -67,7 +71,14 @@ public class BillServlet extends HttpServlet {
             AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST, UserRole.BILLING);
 
             if (appointmentNumber == null || appointmentNumber.isBlank()) {
-                throw new BusinessException("Appointment number is required.");
+                List<BillSummary> summaries = billingService.listRecentBills(20);
+                List<Map<String, Object>> body = new ArrayList<>();
+                for (BillSummary summary : summaries) {
+                    body.add(toJson(summary));
+                }
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.getWriter().write(JsonUtil.write(body));
+                return;
             }
             Bill bill = billingService.findByAppointmentNumber(appointmentNumber);
             Map<String, Object> body = new LinkedHashMap<>();
@@ -93,6 +104,17 @@ public class BillServlet extends HttpServlet {
         json.put("treatmentCost", bill.getTreatmentCost());
         json.put("totalAmount", bill.getTotalAmount());
         json.put("billDate", bill.getBillDate().toString());
+        return json;
+    }
+
+    private Map<String, Object> toJson(BillSummary summary) {
+        Map<String, Object> json = new LinkedHashMap<>();
+        json.put("billId", summary.getBillId());
+        json.put("appointmentNumber", summary.getAppointmentNumber());
+        json.put("patientName", summary.getPatientName());
+        json.put("dentistName", summary.getDentistName());
+        json.put("totalAmount", summary.getTotalAmount());
+        json.put("billDate", summary.getBillDate().toString());
         return json;
     }
 

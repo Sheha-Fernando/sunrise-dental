@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentists - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<script>window.PAGE_ROLES = ["ADMIN"];</script>
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1>Dentists</h1>
+            <p class="page-subtitle">Clinic dentists available for appointment scheduling.</p>
+        </div>
+    </div>
+    <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading dentists...</div></div>
+</template>
+
+<script src="../js/api.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/dentists.js"></script>
+</body>
+</html>

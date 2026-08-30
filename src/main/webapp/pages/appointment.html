@@ -8,47 +8,57 @@
 </head>
 <body>
 
-<header class="app-header">
-    <div class="brand">
-        <span class="brand-name">SUNRISE DENTAL</span>
-        <span class="brand-tagline">Clinic Management System</span>
-    </div>
-    <div class="staff-info">
-        <span>Staff: <strong id="staffName">...</strong></span>
-        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
-    </div>
-</header>
+<script>window.PAGE_ROLES = ["ADMIN", "RECEPTIONIST"];</script>
+<div id="appShell"></div>
 
-<main class="page-container">
+<template id="pageTemplate">
     <div class="page-header">
-        <a class="back-link" href="dashboard.html">&larr; Back to Dashboard</a>
-        <h1>New Appointment</h1>
-        <p>Register a new patient visit.</p>
+        <div>
+            <a class="back-link" href="appointments.html">&larr; Back to Appointments</a>
+            <h1>New Appointment</h1>
+            <p class="page-subtitle">Register a new patient visit.</p>
+        </div>
     </div>
 
     <div id="formAlert" class="alert alert-error" role="alert"></div>
 
     <form id="appointmentForm" novalidate>
         <div class="card">
-            <h2 class="section-title">Patient Information</h2>
+            <h2 class="section-title">Patient</h2>
 
-            <div class="form-group">
-                <label for="patientName">Patient Name <span aria-hidden="true">*</span></label>
-                <input type="text" id="patientName" name="patientName" required>
-                <p class="field-error" id="patientNameError">Patient name is required.</p>
+            <div class="segmented" style="margin-bottom:1.1rem;">
+                <button type="button" class="active" id="newPatientTab">New Patient</button>
+                <button type="button" id="existingPatientTab">Existing Patient</button>
             </div>
 
-            <div class="form-row">
+            <div id="newPatientFields">
                 <div class="form-group">
-                    <label for="contactNumber">Contact Number <span aria-hidden="true">*</span></label>
-                    <input type="tel" id="contactNumber" name="contactNumber" required>
-                    <p class="field-error" id="contactNumberError">Contact number is required.</p>
+                    <label for="patientName">Patient Name <span aria-hidden="true">*</span></label>
+                    <input type="text" id="patientName" name="patientName">
+                    <p class="field-error" id="patientNameError">Patient name is required.</p>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contactNumber">Contact Number <span aria-hidden="true">*</span></label>
+                        <input type="tel" id="contactNumber" name="contactNumber">
+                        <p class="field-error" id="contactNumberError">Contact number is required.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address <span aria-hidden="true">*</span></label>
+                        <input type="text" id="address" name="address">
+                        <p class="field-error" id="addressError">Address is required.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="existingPatientFields" style="display:none;">
                 <div class="form-group">
-                    <label for="address">Address <span aria-hidden="true">*</span></label>
-                    <input type="text" id="address" name="address" required>
-                    <p class="field-error" id="addressError">Address is required.</p>
+                    <label for="patientSearch">Search existing patient</label>
+                    <input type="search" id="patientSearch" placeholder="Search by name or contact number...">
+                    <p class="field-error" id="patientIdError">Please select a patient.</p>
                 </div>
+                <div id="patientSearchResults"></div>
+                <div id="selectedPatientSummary" style="display:none;" class="alert alert-info visible"></div>
             </div>
         </div>
 
@@ -90,10 +100,13 @@
                     <p class="field-error" id="appointmentTimeError">Please select an appointment time.</p>
                 </div>
             </div>
+
+            <button type="button" class="btn btn-secondary btn-sm" id="checkAvailabilityBtn">Check Availability</button>
+            <div id="availabilityResult" style="margin-top:0.75rem;"></div>
         </div>
 
         <div class="btn-row">
-            <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+            <a href="appointments.html" class="btn btn-secondary">Cancel</a>
             <button type="submit" class="btn btn-primary" id="submitButton">Register Appointment</button>
         </div>
     </form>
@@ -127,11 +140,12 @@
             <button type="button" class="btn btn-primary" id="viewAppointmentBtn">View Appointment</button>
         </div>
     </div>
-</main>
+</template>
 
 <script src="../js/api.js"></script>
 <script src="../js/format.js"></script>
-<script src="../js/guard.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/toast.js"></script>
 <script src="../js/appointment.js"></script>
 </body>
 </html>

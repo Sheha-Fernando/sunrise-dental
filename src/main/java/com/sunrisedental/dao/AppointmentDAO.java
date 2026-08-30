@@ -18,9 +18,82 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class AppointmentDAO {
+
+    private static final String JOIN_SELECT =
+            "SELECT a.appointment_id, a.appointment_number, a.appointment_date, a.appointment_time, "
+          + "       a.status, a.created_by, a.created_at, "
+          + "       p.patient_id, p.patient_name, p.address, p.contact_number, p.created_at AS patient_created_at, "
+          + "       d.dentist_id, d.dentist_name, d.contact_number AS dentist_contact, d.is_active AS dentist_active, "
+          + "       t.treatment_id, t.treatment_name, t.cost, t.is_active AS treatment_active "
+          + "FROM appointments a "
+          + "JOIN patients p ON a.patient_id = p.patient_id "
+          + "JOIN dentists d ON a.dentist_id = d.dentist_id "
+          + "JOIN treatments t ON a.treatment_id = t.treatment_id ";
+
+    /**
+     * Lists appointments for the schedule/dashboard views. All filters are
+     * optional; callers (AppointmentService) are responsible for forcing
+     * dentistId when the caller is a DENTIST - this method itself applies
+     * no authorization, only the filters it is given.
+     */
+    public List<Appointment> findAll(LocalDate date, AppointmentStatus status, Integer dentistId) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            return findAll(conn, date, status, dentistId);
+        }
+    }
+
+    public List<Appointment> findAll(Connection conn, LocalDate date, AppointmentStatus status, Integer dentistId)
+            throws SQLException {
+        StringBuilder sql = new StringBuilder(JOIN_SELECT).append("WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        if (date != null) {
+            sql.append("AND a.appointment_date = ? ");
+            params.add(Date.valueOf(date));
+        }
+        if (status != null) {
+            sql.append("AND a.status = ? ");
+            params.add(status.name());
+        }
+        if (dentistId != null) {
+            sql.append("AND a.dentist_id = ? ");
+            params.add(dentistId);
+        }
+        sql.append("ORDER BY a.appointment_date, a.appointment_time");
+
+        List<Appointment> appointments = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    appointments.add(mapRow(rs));
+                }
+            }
+        }
+        return appointments;
+    }
+
+    public List<Appointment> findByPatientId(int patientId) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            String sql = JOIN_SELECT + "WHERE a.patient_id = ? ORDER BY a.appointment_date DESC, a.appointment_time DESC";
+            List<Appointment> appointments = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, patientId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        appointments.add(mapRow(rs));
+                    }
+                }
+            }
+            return appointments;
+        }
+    }
 
     public int create(Connection conn, int patientId, int dentistId, int treatmentId,
                        String appointmentNumber, LocalDate appointmentDate, LocalTime appointmentTime,

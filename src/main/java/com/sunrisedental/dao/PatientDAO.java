@@ -2,16 +2,60 @@ package com.sunrisedental.dao;
 
 import com.sunrisedental.db.DatabaseConfig;
 import com.sunrisedental.model.Patient;
+import com.sunrisedental.model.PatientSummary;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class PatientDAO {
+
+    /**
+     * Patients list screen: name/contact search plus last-visit and visit
+     * count derived from appointments. search may be null/blank for "all".
+     */
+    public List<PatientSummary> findAllSummaries(String search) throws SQLException {
+        String sql = "SELECT p.patient_id, p.patient_name, p.contact_number, "
+                + "       MAX(a.appointment_date) AS last_appointment_date, "
+                + "       COUNT(a.appointment_id) AS appointment_count "
+                + "FROM patients p "
+                + "LEFT JOIN appointments a ON a.patient_id = p.patient_id "
+                + (search != null && !search.isBlank()
+                        ? "WHERE p.patient_name LIKE ? OR p.contact_number LIKE ? "
+                        : "")
+                + "GROUP BY p.patient_id, p.patient_name, p.contact_number "
+                + "ORDER BY p.patient_name";
+
+        List<PatientSummary> summaries = new ArrayList<>();
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (search != null && !search.isBlank()) {
+                String like = "%" + search.trim() + "%";
+                ps.setString(1, like);
+                ps.setString(2, like);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PatientSummary summary = new PatientSummary();
+                    summary.setPatientId(rs.getInt("patient_id"));
+                    summary.setPatientName(rs.getString("patient_name"));
+                    summary.setContactNumber(rs.getString("contact_number"));
+                    Date lastDate = rs.getDate("last_appointment_date");
+                    summary.setLastAppointmentDate(lastDate != null ? lastDate.toLocalDate() : null);
+                    summary.setAppointmentCount(rs.getInt("appointment_count"));
+                    summaries.add(summary);
+                }
+            }
+        }
+        return summaries;
+    }
 
     public int create(Patient patient) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {

@@ -9,25 +9,21 @@
 </head>
 <body>
 
-<header class="app-header no-print">
-    <div class="brand">
-        <span class="brand-name">SUNRISE DENTAL</span>
-        <span class="brand-tagline">Clinic Management System</span>
-    </div>
-    <div class="staff-info">
-        <span>Staff: <strong id="staffName">...</strong></span>
-        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
-    </div>
-</header>
+<script>window.PAGE_ROLES = ["ADMIN", "RECEPTIONIST", "BILLING"];</script>
+<div id="appShell"></div>
 
-<main class="page-container narrow">
+<template id="pageTemplate">
     <div class="page-header no-print">
-        <a class="back-link" href="dashboard.html">&larr; Back to Dashboard</a>
-        <h1>Billing</h1>
-        <p>Generate and print a patient bill.</p>
+        <div>
+            <h1>Billing</h1>
+            <p class="page-subtitle">Generate and print a patient bill.</p>
+        </div>
     </div>
+
+    <div class="card-row no-print" id="statCards" style="margin-bottom:1.25rem;"></div>
 
     <div class="card no-print" id="lookupCard">
+        <h2 class="section-title">Find Appointment</h2>
         <form id="lookupForm" novalidate>
             <div class="form-group">
                 <label for="appointmentNumber">Appointment Number</label>
@@ -69,7 +65,8 @@
         <div class="receipt">
             <div class="receipt-header">
                 <div class="clinic-name">SUNRISE DENTAL CLINIC</div>
-                <div>Patient Bill</div>
+                <div class="clinic-location">Colombo, Sri Lanka</div>
+                <div style="margin-top:0.5rem;">Receipt</div>
             </div>
 
             <div class="receipt-line"><span>Appointment No.</span><strong id="billNumber"></strong></div>
@@ -80,8 +77,8 @@
 
             <hr class="receipt-divider">
 
-            <div class="receipt-line"><span>Consultation Fee</span><span id="billConsultation"></span></div>
             <div class="receipt-line"><span>Treatment Cost</span><span id="billTreatmentCost"></span></div>
+            <div class="receipt-line"><span>Consultation Fee</span><span id="billConsultation"></span></div>
 
             <hr class="receipt-divider">
 
@@ -92,14 +89,20 @@
 
         <div class="btn-row no-print">
             <a href="dashboard.html" class="btn btn-secondary">Back</a>
-            <button type="button" class="btn btn-primary" id="printBillBtn">Print Bill</button>
+            <button type="button" class="btn btn-primary" id="printBillBtn">Print Receipt</button>
         </div>
     </div>
-</main>
+
+    <div class="card no-print" id="recentBillsCard" style="margin-top:1.25rem;">
+        <h2 class="section-title">Recent Bills</h2>
+        <div id="recentBillsContainer"><div class="loading-inline"><span class="spinner"></span> Loading...</div></div>
+    </div>
+</template>
 
 <script src="../js/api.js"></script>
 <script src="../js/format.js"></script>
-<script src="../js/guard.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/toast.js"></script>
 <script src="../js/billing.js"></script>
 </body>
 </html>
