@@ -1,0 +1,71 @@
+package com.sunrisedental.dao;
+
+import com.sunrisedental.db.DatabaseConfig;
+import com.sunrisedental.model.Bill;
+
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.Optional;
+
+public class BillDAO {
+
+    public int create(Bill bill) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            return create(conn, bill);
+        }
+    }
+
+    public int create(Connection conn, Bill bill) throws SQLException {
+        // total_amount is a MySQL GENERATED ALWAYS AS column - never inserted directly.
+        String sql = "INSERT INTO bills (appointment_id, consultation_fee, treatment_cost) VALUES (?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, bill.getAppointmentId());
+            ps.setBigDecimal(2, bill.getConsultationFee());
+            ps.setBigDecimal(3, bill.getTreatmentCost());
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int billId = keys.getInt(1);
+                    bill.setBillId(billId);
+                    return billId;
+                }
+                throw new SQLException("Failed to obtain generated bill_id");
+            }
+        }
+    }
+
+    public Optional<Bill> findByAppointmentId(int appointmentId) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            return findByAppointmentId(conn, appointmentId);
+        }
+    }
+
+    public Optional<Bill> findByAppointmentId(Connection conn, int appointmentId) throws SQLException {
+        String sql = "SELECT bill_id, appointment_id, consultation_fee, treatment_cost, total_amount, bill_date "
+                + "FROM bills WHERE appointment_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, appointmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
+            }
+        }
+    }
+
+    private Bill mapRow(ResultSet rs) throws SQLException {
+        Bill bill = new Bill();
+        bill.setBillId(rs.getInt("bill_id"));
+        bill.setAppointmentId(rs.getInt("appointment_id"));
+        bill.setConsultationFee(rs.getBigDecimal("consultation_fee"));
+        bill.setTreatmentCost(rs.getBigDecimal("treatment_cost"));
+        BigDecimal total = rs.getBigDecimal("total_amount");
+        bill.setTotalAmount(total);
+        Timestamp billDate = rs.getTimestamp("bill_date");
+        bill.setBillDate(billDate != null ? billDate.toLocalDateTime() : null);
+        return bill;
+    }
+}

@@ -1,0 +1,152 @@
+package com.sunrisedental.dao;
+
+import com.sunrisedental.db.DatabaseConfig;
+import com.sunrisedental.model.Appointment;
+import com.sunrisedental.model.AppointmentStatus;
+import com.sunrisedental.model.Dentist;
+import com.sunrisedental.model.Patient;
+import com.sunrisedental.model.Treatment;
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Optional;
+
+public class AppointmentDAO {
+
+    public int create(Connection conn, int patientId, int dentistId, int treatmentId,
+                       String appointmentNumber, LocalDate appointmentDate, LocalTime appointmentTime,
+                       Integer createdBy) throws SQLException {
+        String sql = "INSERT INTO appointments "
+                + "(appointment_number, patient_id, dentist_id, treatment_id, appointment_date, appointment_time, status, created_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?, 'SCHEDULED', ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, appointmentNumber);
+            ps.setInt(2, patientId);
+            ps.setInt(3, dentistId);
+            ps.setInt(4, treatmentId);
+            ps.setDate(5, Date.valueOf(appointmentDate));
+            ps.setTime(6, Time.valueOf(appointmentTime));
+            if (createdBy != null) {
+                ps.setInt(7, createdBy);
+            } else {
+                ps.setNull(7, Types.INTEGER);
+            }
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+                throw new SQLException("Failed to obtain generated appointment_id");
+            }
+        }
+    }
+
+    public boolean existsByAppointmentNumber(String appointmentNumber) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            return existsByAppointmentNumber(conn, appointmentNumber);
+        }
+    }
+
+    public boolean existsByAppointmentNumber(Connection conn, String appointmentNumber) throws SQLException {
+        String sql = "SELECT 1 FROM appointments WHERE appointment_number = ? LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, appointmentNumber);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public boolean isDentistBooked(int dentistId, LocalDate date, LocalTime time) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            return isDentistBooked(conn, dentistId, date, time);
+        }
+    }
+
+    public boolean isDentistBooked(Connection conn, int dentistId, LocalDate date, LocalTime time) throws SQLException {
+        String sql = "SELECT 1 FROM appointments "
+                + "WHERE dentist_id = ? AND appointment_date = ? AND appointment_time = ? AND status <> 'CANCELLED' "
+                + "LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, dentistId);
+            ps.setDate(2, Date.valueOf(date));
+            ps.setTime(3, Time.valueOf(time));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public Optional<Appointment> findByAppointmentNumber(String appointmentNumber) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            return findByAppointmentNumber(conn, appointmentNumber);
+        }
+    }
+
+    public Optional<Appointment> findByAppointmentNumber(Connection conn, String appointmentNumber) throws SQLException {
+        String sql = "SELECT a.appointment_id, a.appointment_number, a.appointment_date, a.appointment_time, "
+                + "       a.status, a.created_by, a.created_at, "
+                + "       p.patient_id, p.patient_name, p.address, p.contact_number, p.created_at AS patient_created_at, "
+                + "       d.dentist_id, d.dentist_name, d.contact_number AS dentist_contact, d.is_active AS dentist_active, "
+                + "       t.treatment_id, t.treatment_name, t.cost, t.is_active AS treatment_active "
+                + "FROM appointments a "
+                + "JOIN patients p ON a.patient_id = p.patient_id "
+                + "JOIN dentists d ON a.dentist_id = d.dentist_id "
+                + "JOIN treatments t ON a.treatment_id = t.treatment_id "
+                + "WHERE a.appointment_number = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, appointmentNumber);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
+            }
+        }
+    }
+
+    private Appointment mapRow(ResultSet rs) throws SQLException {
+        Patient patient = new Patient();
+        patient.setPatientId(rs.getInt("patient_id"));
+        patient.setPatientName(rs.getString("patient_name"));
+        patient.setAddress(rs.getString("address"));
+        patient.setContactNumber(rs.getString("contact_number"));
+        Timestamp patientCreatedAt = rs.getTimestamp("patient_created_at");
+        patient.setCreatedAt(patientCreatedAt != null ? patientCreatedAt.toLocalDateTime() : null);
+
+        Dentist dentist = new Dentist();
+        dentist.setDentistId(rs.getInt("dentist_id"));
+        dentist.setDentistName(rs.getString("dentist_name"));
+        dentist.setContactNumber(rs.getString("dentist_contact"));
+        dentist.setActive(rs.getBoolean("dentist_active"));
+
+        Treatment treatment = new Treatment();
+        treatment.setTreatmentId(rs.getInt("treatment_id"));
+        treatment.setTreatmentName(rs.getString("treatment_name"));
+        treatment.setCost(rs.getBigDecimal("cost"));
+        treatment.setActive(rs.getBoolean("treatment_active"));
+
+        Appointment appointment = new Appointment();
+        appointment.setAppointmentId(rs.getInt("appointment_id"));
+        appointment.setAppointmentNumber(rs.getString("appointment_number"));
+        appointment.setPatient(patient);
+        appointment.setDentist(dentist);
+        appointment.setTreatment(treatment);
+        Date date = rs.getDate("appointment_date");
+        appointment.setAppointmentDate(date != null ? date.toLocalDate() : null);
+        Time time = rs.getTime("appointment_time");
+        appointment.setAppointmentTime(time != null ? time.toLocalTime() : null);
+        appointment.setStatus(AppointmentStatus.valueOf(rs.getString("status")));
+        int createdBy = rs.getInt("created_by");
+        appointment.setCreatedBy(rs.wasNull() ? null : createdBy);
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        appointment.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
+        return appointment;
+    }
+}
