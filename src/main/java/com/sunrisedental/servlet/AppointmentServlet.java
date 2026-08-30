@@ -1,9 +1,12 @@
 package com.sunrisedental.servlet;
 
 import com.sunrisedental.exception.BusinessException;
+import com.sunrisedental.exception.ForbiddenException;
 import com.sunrisedental.model.Appointment;
+import com.sunrisedental.model.UserRole;
 import com.sunrisedental.service.AppointmentService;
 import com.sunrisedental.service.NewAppointmentRequest;
+import com.sunrisedental.util.AuthorizationUtil;
 import com.sunrisedental.util.JsonUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -36,6 +39,8 @@ public class AppointmentServlet extends HttpServlet {
             throws ServletException, IOException {
         resp.setContentType("application/json");
         try {
+            AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST);
+
             String appointmentNumber = req.getParameter("appointmentNumber");
             String patientIdParam = req.getParameter("patientId");
             Integer patientId = (patientIdParam == null || patientIdParam.isBlank())
@@ -62,6 +67,8 @@ public class AppointmentServlet extends HttpServlet {
             body.put("appointment", toJson(appointment));
             resp.setStatus(HttpServletResponse.SC_CREATED);
             resp.getWriter().write(JsonUtil.write(body));
+        } catch (ForbiddenException e) {
+            writeError(resp, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         } catch (BusinessException e) {
             writeError(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (NumberFormatException | DateTimeParseException e) {
@@ -85,11 +92,19 @@ public class AppointmentServlet extends HttpServlet {
 
         try {
             Appointment appointment = appointmentService.findByAppointmentNumber(appointmentNumber);
+
+            // DENTIST users may only see their own appointments - never
+            // another dentist's patient data, even via a direct API call.
+            appointmentService.verifyDentistOwnership(appointment,
+                    AuthorizationUtil.currentRole(req), AuthorizationUtil.currentDentistId(req));
+
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");
             body.put("appointment", toJson(appointment));
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(JsonUtil.write(body));
+        } catch (ForbiddenException e) {
+            writeError(resp, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         } catch (BusinessException e) {
             writeError(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (Exception e) {

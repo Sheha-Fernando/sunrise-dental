@@ -3,6 +3,7 @@ package com.sunrisedental.service;
 import com.sunrisedental.dao.UserDAO;
 import com.sunrisedental.exception.BusinessException;
 import com.sunrisedental.model.User;
+import com.sunrisedental.model.UserRole;
 import com.sunrisedental.util.PasswordUtil;
 
 import java.sql.SQLException;
@@ -34,9 +35,17 @@ public class AuthService {
         }
         try {
             Optional<User> found = userDAO.findByUsername(username.trim());
-            if (found.isEmpty() || !PasswordUtil.verify(plainPassword, found.get().getPasswordHash())) {
+
+            // Every failure path below returns the same generic message -
+            // never reveal whether the username exists, whether the account
+            // is inactive, or whether the password was merely wrong.
+            if (found.isEmpty()
+                    || !found.get().isActive()
+                    || !PasswordUtil.verify(plainPassword, found.get().getPasswordHash())
+                    || (found.get().getRole() == UserRole.DENTIST && found.get().getDentistId() == null)) {
                 throw new BusinessException("Invalid username or password.");
             }
+
             User user = found.get();
             user.setPasswordHash(null);
             return user;

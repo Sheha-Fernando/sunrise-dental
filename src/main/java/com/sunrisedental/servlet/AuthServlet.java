@@ -33,10 +33,20 @@ public class AuthServlet extends HttpServlet {
         try {
             User user = authService.authenticate(username, password);
 
+            // Session fixation prevention: never reuse whatever (possibly
+            // pre-authentication) session ID the client presented - discard
+            // it and start a fresh, authenticated session with a new ID.
+            HttpSession existing = req.getSession(false);
+            if (existing != null) {
+                existing.invalidate();
+            }
             HttpSession session = req.getSession(true);
+            session.setMaxInactiveInterval(30 * 60); // 30 minutes
             session.setAttribute("userId", user.getUserId());
             session.setAttribute("username", user.getUsername());
             session.setAttribute("fullName", user.getFullName());
+            session.setAttribute("role", user.getRole());
+            session.setAttribute("dentistId", user.getDentistId());
 
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");
@@ -44,6 +54,8 @@ public class AuthServlet extends HttpServlet {
             body.put("userId", user.getUserId());
             body.put("username", user.getUsername());
             body.put("fullName", user.getFullName());
+            body.put("role", user.getRole().name());
+            body.put("dentistId", user.getDentistId());
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(JsonUtil.write(body));
         } catch (BusinessException e) {
