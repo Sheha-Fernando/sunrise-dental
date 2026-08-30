@@ -46,12 +46,14 @@
 
         const searchInput = document.getElementById("filterSearch");
         if (isScopedRole(session.role)) {
+            document.getElementById("patientStats").remove();
             searchInput.placeholder = "Filter by patient name...";
             loadDentistPatients();
             searchInput.addEventListener("input", () => renderDentistPatients(searchInput.value));
         } else {
             let debounce = null;
             loadPatients("");
+            loadPatientStats();
             searchInput.addEventListener("input", () => {
                 clearTimeout(debounce);
                 debounce = setTimeout(() => loadPatients(searchInput.value.trim()), 300);
@@ -89,7 +91,10 @@
         }
         const rows = patients.map(p => `
             <tr ${clickable ? `class="clickable" onclick="window.location.href='patients.html?id=${p.patientId}'"` : ""}>
-                <td class="table-primary-text">${escapeHtml(p.patientName)}</td>
+                <td>
+                    <div class="table-primary-text">${escapeHtml(p.patientName)}</div>
+                    <div class="table-muted-text">PT-${String(p.patientId).padStart(6, "0")}</div>
+                </td>
                 <td>${escapeHtml(p.contactNumber)}</td>
                 <td>${p.assignedDentistName ? escapeHtml(p.assignedDentistName) : "&mdash;"}</td>
                 <td>${p.lastVisitDate ? Fmt.date(p.lastVisitDate) : "&mdash;"}</td>
@@ -100,6 +105,39 @@
             <thead><tr><th>Patient</th><th>Contact</th><th>Assigned Dentist</th><th>Last Visit</th><th>Next Appointment</th><th>Status</th></tr></thead>
             <tbody>${rows}</tbody>
         </table></div>`;
+    }
+
+    async function loadPatientStats() {
+        const statsEl = document.getElementById("patientStats");
+        try {
+            const patients = await Api.get("/patients");
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const withUpcoming = patients.filter(p => p.nextAppointmentDate).length;
+            const newThisMonth = patients.filter(p => {
+                if (!p.registeredDate) return false;
+                const d = new Date(p.registeredDate);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            }).length;
+            const visitedThisMonth = patients.filter(p => {
+                if (!p.lastVisitDate) return false;
+                const d = new Date(p.lastVisitDate);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            }).length;
+
+            statsEl.innerHTML = [
+                ["Total Patients", patients.length],
+                ["With Upcoming Appointment", withUpcoming],
+                ["Visited This Month", visitedThisMonth],
+                ["New This Month", newThisMonth],
+            ].map(([label, value]) => `<div class="stat-card">
+                <div class="stat-label">${label}</div>
+                <div class="stat-value">${value}</div>
+            </div>`).join("");
+        } catch (err) {
+            statsEl.innerHTML = "";
+        }
     }
 
     let dentistPatients = [];
@@ -257,21 +295,27 @@
 
     // ---------------------------------------------------------------- profile ----
 
+    let currentProfilePatient = null;
+
     async function initProfile(patientId) {
         const content = document.getElementById("pageContent");
         content.appendChild(document.getElementById("profileTemplate").content.cloneNode(true));
+        wireEditModal(patientId);
 
         try {
             const result = await Api.get("/patients/" + patientId);
+            currentProfilePatient = result.patient;
             document.getElementById("profileName").textContent = result.patient.patientName;
             document.getElementById("profileMeta").textContent = "Patient ID: P-" + String(patientId).padStart(6, "0");
             document.getElementById("profileContact").textContent = result.patient.contactNumber;
             document.getElementById("profileAddress").textContent = result.patient.address;
 
-            const canCreate = session.role === "ADMIN" || session.role === "RECEPTIONIST";
-            if (canCreate) {
+            const canEdit = session.role === "ADMIN" || session.role === "RECEPTIONIST";
+            if (canEdit) {
                 document.getElementById("profileActions").innerHTML =
+                    `<button type="button" class="btn btn-secondary" id="openEditPatientBtn">Edit Patient</button>` +
                     `<a href="appointment.html" class="btn btn-primary">New Appointment</a>`;
+                document.getElementById("openEditPatientBtn").addEventListener("click", () => openEditModal());
             }
 
             const history = result.appointmentHistory;
@@ -301,5 +345,80 @@
                 <div class="empty-desc">${escapeHtml(err.message || "Please try again.")}</div>
             </div>`;
         }
+    }
+
+    // ------------------------------------------------------------- edit patient ----
+
+    function openEditModal() {
+        if (!currentProfilePatient) return;
+        document.getElementById("editPatientName").value = currentProfilePatient.patientName;
+        document.getElementById("editAddress").value = currentProfilePatient.address;
+        document.getElementById("editContact").value = currentProfilePatient.contactNumber;
+        document.getElementById("editAlert").classList.remove("visible");
+        document.getElementById("editModalOverlay").classList.add("open");
+        document.getElementById("editPatientName").focus();
+    }
+
+    function closeEditModal() {
+        document.getElementById("editModalOverlay").classList.remove("open");
+    }
+
+    function wireEditModal(patientId) {
+        document.getElementById("closeEditModal").addEventListener("click", closeEditModal);
+        document.getElementById("cancelEditBtn").addEventListener("click", closeEditModal);
+        document.getElementById("editModalOverlay").addEventListener("click", (e) => {
+            if (e.target.id === "editModalOverlay") closeEditModal();
+        });
+
+        document.getElementById("editForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const name = document.getElementById("editPatientName");
+            const address = document.getElementById("editAddress");
+            const contact = document.getElementById("editContact");
+            const fields = [
+                { input: name, error: document.getElementById("editPatientNameError") },
+                { input: address, error: document.getElementById("editAddressError") },
+                { input: contact, error: document.getElementById("editContactError") },
+            ];
+            let valid = true;
+            for (const f of fields) {
+                if (f.input.value.trim() === "") {
+                    f.input.setAttribute("aria-invalid", "true");
+                    f.error.classList.add("visible");
+                    valid = false;
+                } else {
+                    f.input.removeAttribute("aria-invalid");
+                    f.error.classList.remove("visible");
+                }
+            }
+            if (!valid) return;
+
+            const submitBtn = document.getElementById("editSubmitBtn");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Saving...";
+            const alertEl = document.getElementById("editAlert");
+            alertEl.classList.remove("visible");
+
+            try {
+                const params = new URLSearchParams({
+                    patientName: name.value.trim(),
+                    address: address.value.trim(),
+                    contactNumber: contact.value.trim(),
+                });
+                const result = await Api.put(`/patients/${patientId}?${params.toString()}`);
+                currentProfilePatient = result.patient;
+                document.getElementById("profileName").textContent = result.patient.patientName;
+                document.getElementById("profileContact").textContent = result.patient.contactNumber;
+                document.getElementById("profileAddress").textContent = result.patient.address;
+                closeEditModal();
+                Toast.success("Patient details updated successfully.");
+            } catch (err) {
+                alertEl.textContent = err.message;
+                alertEl.classList.add("visible");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Save Changes";
+            }
+        });
     }
 })();

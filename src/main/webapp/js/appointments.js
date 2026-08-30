@@ -17,17 +17,36 @@
                 `<a href="appointment.html" class="btn btn-primary">+ New Appointment</a>`;
         }
 
+        const showsAllDentists = session.role !== "DENTIST" && session.role !== "CLINICAL_ASSISTANT";
+        if (showsAllDentists) {
+            loadDentistFilterOptions();
+        }
+
         document.getElementById("filterSearch").addEventListener("input", renderFiltered);
         document.getElementById("filterDate").addEventListener("change", loadAppointments);
+        document.getElementById("filterDentist").addEventListener("change", renderFiltered);
         document.getElementById("filterStatus").addEventListener("change", renderFiltered);
         document.getElementById("clearFiltersBtn").addEventListener("click", () => {
             document.getElementById("filterSearch").value = "";
             document.getElementById("filterDate").value = "";
+            document.getElementById("filterDentist").value = "";
             document.getElementById("filterStatus").value = "";
             loadAppointments();
         });
 
         loadAppointments();
+    }
+
+    async function loadDentistFilterOptions() {
+        const select = document.getElementById("filterDentist");
+        try {
+            const dentists = await Api.get("/dentists");
+            select.innerHTML = '<option value="">All dentists</option>' +
+                dentists.map(d => `<option value="${escapeHtml(d.dentistName)}">${escapeHtml(d.dentistName)}</option>`).join("");
+            select.style.display = "";
+        } catch (err) {
+            // Non-fatal - the filter simply stays hidden if the dentist list can't load.
+        }
     }
 
     async function loadAppointments() {
@@ -49,6 +68,7 @@
     function renderFiltered() {
         const search = document.getElementById("filterSearch").value.trim().toLowerCase();
         const status = document.getElementById("filterStatus").value;
+        const dentistFilter = document.getElementById("filterDentist").value;
 
         let filtered = allAppointments;
         if (search) {
@@ -57,6 +77,9 @@
         }
         if (status) {
             filtered = filtered.filter(a => a.status === status);
+        }
+        if (dentistFilter) {
+            filtered = filtered.filter(a => a.dentistName === dentistFilter);
         }
         filtered = [...filtered].sort((a, b) =>
             (a.appointmentDate + a.appointmentTime).localeCompare(b.appointmentDate + b.appointmentTime));

@@ -21,6 +21,7 @@ public class PatientSummary {
     private LocalDate lastVisitDate;
     private LocalDate nextAppointmentDate;
     private LocalTime nextAppointmentTime;
+    private LocalDate registeredDate;
 
     public int getPatientId() {
         return patientId;
@@ -76,5 +77,13 @@ public class PatientSummary {
 
     public void setNextAppointmentTime(LocalTime nextAppointmentTime) {
         this.nextAppointmentTime = nextAppointmentTime;
+    }
+
+    public LocalDate getRegisteredDate() {
+        return registeredDate;
+    }
+
+    public void setRegisteredDate(LocalDate registeredDate) {
+        this.registeredDate = registeredDate;
     }
 }

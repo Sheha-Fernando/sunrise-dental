@@ -20,11 +20,12 @@ public class BillDAO {
     /** Recent bills for the billing list/dashboard, most recent first. */
     public List<BillSummary> findRecent(int limit) throws SQLException {
         String sql = "SELECT b.bill_id, a.appointment_number, p.patient_name, d.dentist_name, "
-                + "       b.total_amount, b.bill_date "
+                + "       t.treatment_name, b.total_amount, b.bill_date "
                 + "FROM bills b "
                 + "JOIN appointments a ON b.appointment_id = a.appointment_id "
                 + "JOIN patients p ON a.patient_id = p.patient_id "
                 + "JOIN dentists d ON a.dentist_id = d.dentist_id "
+                + "JOIN treatments t ON a.treatment_id = t.treatment_id "
                 + "ORDER BY b.bill_date DESC "
                 + "LIMIT ?";
         List<BillSummary> summaries = new ArrayList<>();
@@ -38,6 +39,7 @@ public class BillDAO {
                     summary.setAppointmentNumber(rs.getString("appointment_number"));
                     summary.setPatientName(rs.getString("patient_name"));
                     summary.setDentistName(rs.getString("dentist_name"));
+                    summary.setTreatmentName(rs.getString("treatment_name"));
                     summary.setTotalAmount(rs.getBigDecimal("total_amount"));
                     Timestamp billDate = rs.getTimestamp("bill_date");
                     summary.setBillDate(billDate != null ? billDate.toLocalDateTime() : null);

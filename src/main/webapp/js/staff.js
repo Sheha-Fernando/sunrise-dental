@@ -61,11 +61,17 @@
             container.innerHTML = `<div class="empty-state"><div class="empty-title">No staff accounts found</div></div>`;
             return;
         }
-        const rows = staffList.map(s => `
+        const rows = staffList.map(s => {
+            const linkedDentistId = s.dentistId != null ? s.dentistId : s.assignedDentistId;
+            const linkedDentist = linkedDentistId != null
+                ? activeDentists.find(d => d.dentistId === linkedDentistId)
+                : null;
+            return `
             <tr>
                 <td class="table-primary-text">${escapeHtml(s.fullName)}</td>
                 <td class="table-muted-text">${escapeHtml(s.username)}</td>
                 <td>${escapeHtml(Shell.roleLabel(s.role))}</td>
+                <td>${linkedDentist ? escapeHtml(linkedDentist.dentistName) : "&mdash;"}</td>
                 <td><span class="badge ${s.active ? "badge-active" : "badge-inactive"}">${s.active ? "Active" : "Inactive"}</span></td>
                 <td>
                     <button type="button" class="btn btn-secondary btn-sm" data-action="role" data-id="${s.userId}">Change Role</button>
@@ -73,9 +79,10 @@
                         ${s.active ? "Deactivate" : "Activate"}
                     </button>
                 </td>
-            </tr>`).join("");
+            </tr>`;
+        }).join("");
         container.innerHTML = `<div class="table-wrap"><table class="data-table">
-            <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Assigned Dentist</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>${rows}</tbody>
         </table></div>`;
 

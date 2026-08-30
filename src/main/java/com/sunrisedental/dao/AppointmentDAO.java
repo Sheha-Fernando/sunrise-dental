@@ -123,6 +123,20 @@ public class AppointmentDAO {
         }
     }
 
+    /**
+     * Assigns the final, staff-facing appointment number once the real
+     * appointment_id is known - see AppointmentService.createAppointment for
+     * why: the number is derived from the id, so it is unique by definition.
+     */
+    public void updateAppointmentNumber(Connection conn, int appointmentId, String appointmentNumber) throws SQLException {
+        String sql = "UPDATE appointments SET appointment_number = ? WHERE appointment_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, appointmentNumber);
+            ps.setInt(2, appointmentId);
+            ps.executeUpdate();
+        }
+    }
+
     public boolean existsByAppointmentNumber(String appointmentNumber) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
             return existsByAppointmentNumber(conn, appointmentNumber);

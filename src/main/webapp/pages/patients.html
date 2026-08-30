@@ -19,9 +19,11 @@
         <div class="page-header-actions" id="headerActions"></div>
     </div>
 
+    <div class="card-row" id="patientStats" style="margin-bottom:1.25rem;"></div>
+
     <div class="toolbar">
         <div class="toolbar-search">
-            <input type="search" id="filterSearch" placeholder="Search by name or contact number...">
+            <input type="search" id="filterSearch" placeholder="Search by name, contact number or patient ID...">
         </div>
     </div>
 
@@ -46,6 +48,10 @@
                 <div class="detail-value" id="profileContact"></div>
             </div>
             <div class="detail-item">
+                <div class="detail-label">Status</div>
+                <div class="detail-value"><span class="badge badge-active">Active</span></div>
+            </div>
+            <div class="detail-item" style="grid-column: 1 / -1;">
                 <div class="detail-label">Address</div>
                 <div class="detail-value" id="profileAddress"></div>
             </div>
@@ -59,9 +65,9 @@
 </template>
 
 <div class="modal-overlay" id="registerModalOverlay">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle">
         <button type="button" class="modal-close" id="closeRegisterModal" aria-label="Close">&times;</button>
-        <h2>Register New Patient</h2>
+        <h2 id="registerModalTitle">Register New Patient</h2>
         <div id="registerAlert" class="alert alert-error" role="alert"></div>
         <form id="registerForm" novalidate>
             <div class="form-group">
@@ -82,6 +88,35 @@
             <div class="btn-row">
                 <button type="button" class="btn btn-secondary" id="cancelRegisterBtn">Cancel</button>
                 <button type="submit" class="btn btn-primary" id="registerSubmitBtn">Register Patient</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="editModalOverlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+        <button type="button" class="modal-close" id="closeEditModal" aria-label="Close">&times;</button>
+        <h2 id="editModalTitle">Edit Patient</h2>
+        <div id="editAlert" class="alert alert-error" role="alert"></div>
+        <form id="editForm" novalidate>
+            <div class="form-group">
+                <label for="editPatientName">Full Name <span aria-hidden="true">*</span></label>
+                <input type="text" id="editPatientName" required>
+                <p class="field-error" id="editPatientNameError">Patient name is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="editAddress">Address <span aria-hidden="true">*</span></label>
+                <input type="text" id="editAddress" required>
+                <p class="field-error" id="editAddressError">Address is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="editContact">Contact Number <span aria-hidden="true">*</span></label>
+                <input type="tel" id="editContact" required>
+                <p class="field-error" id="editContactError">Please enter a valid contact number.</p>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="editSubmitBtn">Save Changes</button>
             </div>
         </form>
     </div>

@@ -19,6 +19,7 @@ import com.sunrisedental.service.AppointmentService;
 import com.sunrisedental.service.AuthService;
 import com.sunrisedental.service.BillingService;
 import com.sunrisedental.service.NewAppointmentRequest;
+import com.sunrisedental.service.PatientService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -38,6 +39,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -61,9 +63,11 @@ class BackendVerificationTest {
     private static final AppointmentService appointmentService = new AppointmentService();
     private static final BillingService billingService = new BillingService();
     private static final AuthService authService = new AuthService();
+    private static final PatientService patientService = new PatientService();
 
     private static Integer createdPatientId;
     private static Integer createdAppointmentId;
+    private static Integer createdAppointmentId2;
     private static String createdAppointmentNumber;
 
     @Test
@@ -149,24 +153,21 @@ class BackendVerificationTest {
         assertEquals(0, new BigDecimal("500.00").compareTo(consultation.get().getCost()));
     }
 
-    private static String shortTestNumber(String prefix) {
-        // appointment_number is VARCHAR(20) - keep well under that limit.
-        return prefix + (System.nanoTime() % 1_000_000L);
-    }
-
     @Test
     @Order(9)
     void testAppointmentCreation() {
-        createdAppointmentNumber = shortTestNumber("TV-");
         NewAppointmentRequest request = new NewAppointmentRequest(
-                createdAppointmentNumber, null,
+                null,
                 "Test Patient For Appointment", "456 Test Road, Colombo", "0700000002",
                 DENTIST_ID, TREATMENT_ID, TEST_DATE, TEST_TIME, null);
 
         Appointment appointment = appointmentService.createAppointment(request);
         createdAppointmentId = appointment.getAppointmentId();
+        createdAppointmentNumber = appointment.getAppointmentNumber();
 
-        assertEquals(createdAppointmentNumber, appointment.getAppointmentNumber());
+        // Server-generated, staff never types or guesses this.
+        assertTrue(createdAppointmentNumber.matches("APT-\\d{6}"),
+                "Expected an auto-generated APT-NNNNNN number, got: " + createdAppointmentNumber);
         assertEquals(AppointmentStatus.SCHEDULED, appointment.getStatus());
         assertEquals(DENTIST_ID, appointment.getDentist().getDentistId());
         assertEquals(TREATMENT_ID, appointment.getTreatment().getTreatmentId());
@@ -194,23 +195,25 @@ class BackendVerificationTest {
 
     @Test
     @Order(12)
-    void testDuplicateAppointmentNumber() {
+    void testAppointmentNumbersAreUniquelyGenerated() {
         NewAppointmentRequest request = new NewAppointmentRequest(
-                createdAppointmentNumber, null,
+                null,
                 "Another Patient", "Other Address", "0700000003",
                 DENTIST_ID, TREATMENT_ID, TEST_DATE.plusDays(1), LocalTime.of(11, 0), null);
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> appointmentService.createAppointment(request));
-        assertEquals("Appointment number is already in use.", ex.getMessage());
+        Appointment second = appointmentService.createAppointment(request);
+        createdAppointmentId2 = second.getAppointmentId();
+
+        assertTrue(second.getAppointmentNumber().matches("APT-\\d{6}"));
+        assertNotEquals(createdAppointmentNumber, second.getAppointmentNumber(),
+                "Two appointments must never receive the same server-generated number.");
     }
 
     @Test
     @Order(13)
     void testDoubleBookingPrevention() {
-        String otherNumber = shortTestNumber("TVD-");
         NewAppointmentRequest request = new NewAppointmentRequest(
-                otherNumber, null,
+                null,
                 "Double Booking Patient", "Some Address", "0700000004",
                 DENTIST_ID, TREATMENT_ID, TEST_DATE, TEST_TIME, null);
 
@@ -223,20 +226,14 @@ class BackendVerificationTest {
     @Test
     @Order(14)
     void testValidationErrors() {
-        NewAppointmentRequest blankNumber = new NewAppointmentRequest(
-                "", null, "Name", "Address", "0700000005",
-                DENTIST_ID, TREATMENT_ID, TEST_DATE, TEST_TIME, null);
-        assertEquals("Appointment number is required.",
-                assertThrows(BusinessException.class, () -> appointmentService.createAppointment(blankNumber)).getMessage());
-
         NewAppointmentRequest blankPatientName = new NewAppointmentRequest(
-                shortTestNumber("TVV1-"), null, "", "Address", "0700000006",
+                null, "", "Address", "0700000006",
                 DENTIST_ID, TREATMENT_ID, TEST_DATE, TEST_TIME, null);
         assertEquals("Patient name is required.",
                 assertThrows(BusinessException.class, () -> appointmentService.createAppointment(blankPatientName)).getMessage());
 
         NewAppointmentRequest missingDate = new NewAppointmentRequest(
-                shortTestNumber("TVV2-"), null, "Name", "Address", "0700000007",
+                null, "Name", "Address", "0700000007",
                 DENTIST_ID, TREATMENT_ID, null, TEST_TIME, null);
         assertEquals("Appointment date is required.",
                 assertThrows(BusinessException.class, () -> appointmentService.createAppointment(missingDate)).getMessage());
@@ -266,6 +263,32 @@ class BackendVerificationTest {
         assertEquals("A bill has already been generated for this appointment.", ex.getMessage());
     }
 
+    @Test
+    @Order(18)
+    void testPatientUpdateSucceeds() {
+        com.sunrisedental.model.Patient updated = patientService.update(createdPatientId,
+                "Test Patient - Updated Name", "789 Updated Road, Colombo", "0700000009");
+        assertEquals("Test Patient - Updated Name", updated.getPatientName());
+        assertEquals("789 Updated Road, Colombo", updated.getAddress());
+        assertEquals("0700000009", updated.getContactNumber());
+    }
+
+    @Test
+    @Order(19)
+    void testPatientUpdateInvalidContactRejected() {
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> patientService.update(createdPatientId, "Name", "Address", "not-a-phone-number!!"));
+        assertEquals("Please enter a valid contact number.", ex.getMessage());
+    }
+
+    @Test
+    @Order(20)
+    void testPatientUpdateNotFound() {
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> patientService.update(9_999_999, "Name", "Address", "0700000000"));
+        assertEquals("Patient not found.", ex.getMessage());
+    }
+
     @AfterAll
     static void cleanupTestData() throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
@@ -283,6 +306,10 @@ class BackendVerificationTest {
                     deleteAppt.setInt(1, createdAppointmentId);
                     deleteAppt.executeUpdate();
                 }
+                if (createdAppointmentId2 != null) {
+                    deleteAppt.setInt(1, createdAppointmentId2);
+                    deleteAppt.executeUpdate();
+                }
             }
             try (PreparedStatement deletePatientByAppt = conn.prepareStatement(
                     "DELETE FROM patients WHERE contact_number IN (?, ?, ?, ?, ?, ?, ?)")) {
@@ -294,6 +321,15 @@ class BackendVerificationTest {
                 deletePatientByAppt.setString(6, "0700000006");
                 deletePatientByAppt.setString(7, "0700000007");
                 deletePatientByAppt.executeUpdate();
+            }
+            // testPatientUpdateSucceeds changes createdPatientId's contact number away from
+            // "0700000001", so it must also be removed by its tracked ID directly.
+            try (PreparedStatement deletePatientById = conn.prepareStatement(
+                    "DELETE FROM patients WHERE patient_id = ?")) {
+                if (createdPatientId != null) {
+                    deletePatientById.setInt(1, createdPatientId);
+                    deletePatientById.executeUpdate();
+                }
             }
             conn.commit();
         }

@@ -144,10 +144,6 @@ public class AppointmentService {
                         .filter(Treatment::isActive)
                         .orElseThrow(() -> new BusinessException("Treatment not found."));
 
-                if (appointmentDAO.existsByAppointmentNumber(conn, request.appointmentNumber())) {
-                    throw new BusinessException("Appointment number is already in use.");
-                }
-
                 if (appointmentDAO.isDentistBooked(conn, request.dentistId(),
                         request.appointmentDate(), request.appointmentTime())) {
                     throw new BusinessException("This dentist is already booked at this date and time. Please select another time.");
@@ -165,18 +161,27 @@ public class AppointmentService {
                     patientDAO.create(conn, patient);
                 }
 
+                // The appointment number is not staff input: insert with a
+                // throwaway placeholder (unique-enough, never shown to
+                // anyone), then assign the real "APT-NNNNNN" number derived
+                // from the real appointment_id once it's known - unique by
+                // construction, no guessing, no separate sequence table.
+                String placeholder = "TMP" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 15);
                 int appointmentId;
                 try {
                     appointmentId = appointmentDAO.create(conn, patient.getPatientId(), dentist.getDentistId(),
-                            treatment.getTreatmentId(), request.appointmentNumber(),
+                            treatment.getTreatmentId(), placeholder,
                             request.appointmentDate(), request.appointmentTime(), request.createdByUserId());
                 } catch (SQLIntegrityConstraintViolationException e) {
                     throw translateDuplicateKey(e);
                 }
 
+                String appointmentNumber = String.format("APT-%06d", appointmentId);
+                appointmentDAO.updateAppointmentNumber(conn, appointmentId, appointmentNumber);
+
                 Appointment appointment = new Appointment();
                 appointment.setAppointmentId(appointmentId);
-                appointment.setAppointmentNumber(request.appointmentNumber());
+                appointment.setAppointmentNumber(appointmentNumber);
                 appointment.setPatient(patient);
                 appointment.setDentist(dentist);
                 appointment.setTreatment(treatment);
@@ -203,9 +208,6 @@ public class AppointmentService {
 
     private BusinessException translateDuplicateKey(SQLIntegrityConstraintViolationException e) {
         String message = e.getMessage() == null ? "" : e.getMessage();
-        if (message.contains("uq_appointments_number")) {
-            return new BusinessException("Appointment number is already in use.");
-        }
         if (message.contains("uq_appointments_dentist_slot")) {
             return new BusinessException("This dentist is already booked at this date and time. Please select another time.");
         }
@@ -214,9 +216,6 @@ public class AppointmentService {
     }
 
     private void validate(NewAppointmentRequest request) {
-        if (request.appointmentNumber() == null || request.appointmentNumber().isBlank()) {
-            throw new BusinessException("Appointment number is required.");
-        }
         if (request.appointmentDate() == null) {
             throw new BusinessException("Appointment date is required.");
         }

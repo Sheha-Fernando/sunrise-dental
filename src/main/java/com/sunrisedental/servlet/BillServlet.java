@@ -113,6 +113,7 @@ public class BillServlet extends HttpServlet {
         json.put("appointmentNumber", summary.getAppointmentNumber());
         json.put("patientName", summary.getPatientName());
         json.put("dentistName", summary.getDentistName());
+        json.put("treatmentName", summary.getTreatmentName());
         json.put("totalAmount", summary.getTotalAmount());
         json.put("billDate", summary.getBillDate().toString());
         return json;

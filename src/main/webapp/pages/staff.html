@@ -27,9 +27,9 @@
 </template>
 
 <div class="modal-overlay" id="staffModalOverlay">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="staffModalTitle">
         <button type="button" class="modal-close" id="closeStaffModal" aria-label="Close">&times;</button>
-        <h2>Add Staff</h2>
+        <h2 id="staffModalTitle">Add Staff</h2>
         <div id="addStaffAlert" class="alert alert-error" role="alert"></div>
         <form id="addStaffForm" novalidate>
             <div class="form-group">
@@ -80,9 +80,9 @@
 </div>
 
 <div class="modal-overlay" id="roleModalOverlay">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="roleModalTitle">
         <button type="button" class="modal-close" id="closeRoleModal" aria-label="Close">&times;</button>
-        <h2>Change Role</h2>
+        <h2 id="roleModalTitle">Change Role</h2>
         <div id="roleAlert" class="alert alert-error" role="alert"></div>
         <form id="roleForm" novalidate>
             <div class="form-group">
@@ -116,7 +116,7 @@
 </div>
 
 <div class="modal-overlay" id="confirmModalOverlay">
-    <div class="modal" style="max-width:400px;">
+    <div class="modal" style="max-width:400px;" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
         <h2 id="confirmTitle">Are you sure?</h2>
         <p id="confirmMessage" style="color:var(--color-text-muted);"></p>
         <div class="btn-row">

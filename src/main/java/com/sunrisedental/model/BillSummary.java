@@ -14,6 +14,7 @@ public class BillSummary {
     private String appointmentNumber;
     private String patientName;
     private String dentistName;
+    private String treatmentName;
     private BigDecimal totalAmount;
     private LocalDateTime billDate;
 
@@ -47,6 +48,14 @@ public class BillSummary {
 
     public void setDentistName(String dentistName) {
         this.dentistName = dentistName;
+    }
+
+    public String getTreatmentName() {
+        return treatmentName;
+    }
+
+    public void setTreatmentName(String treatmentName) {
+        this.treatmentName = treatmentName;
     }
 
     public BigDecimal getTotalAmount() {

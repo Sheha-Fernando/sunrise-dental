@@ -22,9 +22,10 @@
 
     async function load() {
         try {
-            const [appointments, bills] = await Promise.all([
+            const [appointments, bills, patients] = await Promise.all([
                 Api.get("/appointments"),
                 Api.get("/bills"),
+                Api.get("/patients"),
             ]);
 
             const completed = appointments.filter(a => a.status === "COMPLETED").length;
@@ -35,7 +36,8 @@
                 statCard("Total Appointments", appointments.length) +
                 statCard("Scheduled", scheduled) +
                 statCard("Completed", completed) +
-                statCard("Cancelled", cancelled);
+                statCard("Cancelled", cancelled) +
+                statCard("Total Patients", patients.length);
 
             const totalRevenue = bills.reduce((sum, b) => sum + Number(b.totalAmount), 0);
             document.getElementById("revenueStats").innerHTML =

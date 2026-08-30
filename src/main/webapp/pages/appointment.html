@@ -64,12 +64,9 @@
 
         <div class="card">
             <h2 class="section-title">Appointment Details</h2>
-
-            <div class="form-group">
-                <label for="appointmentNumber">Appointment Number <span aria-hidden="true">*</span></label>
-                <input type="text" id="appointmentNumber" name="appointmentNumber" maxlength="20" required>
-                <p class="field-error" id="appointmentNumberError">Appointment number is required.</p>
-            </div>
+            <p class="field-hint" style="margin-top:-0.5rem; margin-bottom:1.1rem;">
+                The appointment number is assigned automatically once this appointment is registered.
+            </p>
 
             <div class="form-row">
                 <div class="form-group">
@@ -101,8 +98,11 @@
                 </div>
             </div>
 
-            <button type="button" class="btn btn-secondary btn-sm" id="checkAvailabilityBtn">Check Availability</button>
-            <div id="availabilityResult" style="margin-top:0.75rem;"></div>
+            <div class="form-group" id="availabilityGroup" style="display:none;">
+                <label>Available Times for This Dentist</label>
+                <div id="availabilityGrid" class="availability-grid"></div>
+                <p class="field-hint">Select a dentist and date to see which times are already booked.</p>
+            </div>
         </div>
 
         <div class="btn-row">
@@ -136,7 +136,8 @@
             </div>
         </div>
         <div class="btn-row">
-            <button type="button" class="btn btn-secondary" id="registerAnotherBtn">Register Another</button>
+            <button type="button" class="btn btn-secondary" id="registerAnotherBtn">Book Another Appointment</button>
+            <button type="button" class="btn btn-secondary" id="viewPatientBtn">View Patient</button>
             <button type="button" class="btn btn-primary" id="viewAppointmentBtn">View Appointment</button>
         </div>
     </div>

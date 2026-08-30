@@ -32,9 +32,21 @@
             <h3>Registering a Patient</h3>
             <ol>
                 <li>Open Patients from the sidebar.</li>
-                <li>Click + Register Patient.</li>
+                <li>Search first - the patient may already be registered.</li>
+                <li>If they're new, click + Register Patient.</li>
                 <li>Enter the patient's full name, address and contact number.</li>
                 <li>Click Register Patient.</li>
+            </ol>
+        </section>
+
+        <section class="help-section">
+            <h3>Editing Patient Information</h3>
+            <p>Available to Administrators and Receptionists only.</p>
+            <ol>
+                <li>Open the patient's profile from Patients.</li>
+                <li>Click Edit Patient.</li>
+                <li>Update the name, address or contact number.</li>
+                <li>Click Save Changes.</li>
             </ol>
         </section>
 
@@ -42,21 +54,30 @@
             <h3>Creating an Appointment</h3>
             <ol>
                 <li>Open Appointments and click + New Appointment.</li>
-                <li>Choose New Patient or search for an Existing Patient.</li>
-                <li>Enter a unique appointment number.</li>
-                <li>Select a dentist, treatment, date and time.</li>
-                <li>Optionally click Check Availability to confirm the slot is free.</li>
+                <li>Choose New Patient, or search for an Existing Patient by name or contact number.</li>
+                <li>Select a dentist, treatment and date.</li>
+                <li>The available-times grid appears automatically - grey/struck-through times are already
+                    booked for that dentist. Click any open time to select it.</li>
                 <li>Click Register Appointment.</li>
-                <li>Note down the appointment number - it is needed to search for the appointment or generate a bill later.</li>
             </ol>
         </section>
 
         <section class="help-section">
-            <h3>Searching for an Appointment or Patient</h3>
+            <h3>How Are Appointment Numbers Generated?</h3>
+            <p>
+                Automatically, by the system - staff never type or choose one. Each appointment receives
+                a number in the form <strong>APT-000123</strong> as soon as it is registered, shown on the
+                confirmation screen. You never need to guess the next number.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>Finding an Appointment or Patient</h3>
             <ol>
-                <li>Use the search box at the top of any page, or open Appointments/Patients directly.</li>
-                <li>Enter an appointment number or patient name.</li>
-                <li>Click a result row to open its details.</li>
+                <li>Open Appointments to browse, search by patient name or appointment number, and filter
+                    by date, dentist or status.</li>
+                <li>Open Patients to search by name, contact number or patient ID.</li>
+                <li>Click any row to open its full details.</li>
             </ol>
         </section>
 
@@ -97,6 +118,31 @@
                 patients from your own appointment history. You will not see another dentist's
                 schedule or patients.
             </p>
+        </section>
+
+        <section class="help-section">
+            <h3>For Clinical Assistants</h3>
+            <p>
+                Your Dashboard shows your assigned dentist and their schedule. My Schedule and My
+                Patients are limited to that dentist's appointments only - you will not see another
+                dentist's schedule, patients, or any billing/staff/report information.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>What Can Each Role Access?</h3>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Role</th><th>Can access</th></tr></thead>
+                    <tbody>
+                        <tr><td class="table-primary-text">Administrator</td><td>Everything - appointments, patients, billing, dentists, treatments, staff, reports</td></tr>
+                        <tr><td class="table-primary-text">Receptionist</td><td>Appointments, patients (including registration and editing), billing</td></tr>
+                        <tr><td class="table-primary-text">Dentist</td><td>Their own appointments and patients only</td></tr>
+                        <tr><td class="table-primary-text">Clinical Assistant</td><td>Their assigned dentist's appointments and patients only</td></tr>
+                        <tr><td class="table-primary-text">Billing Staff</td><td>Appointments, patients (view only), billing, reports</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <section class="help-section">

@@ -198,6 +198,23 @@ const Shell = (() => {
 
     document.addEventListener("DOMContentLoaded", init);
 
+    // Accessibility: Escape closes whatever modal or profile menu is open,
+    // consistent across every page that uses the shared .modal-overlay pattern.
+    document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") {
+            return;
+        }
+        const openModal = document.querySelector(".modal-overlay.open");
+        if (openModal) {
+            openModal.classList.remove("open");
+            return;
+        }
+        const menu = document.getElementById("shellProfileMenu");
+        if (menu && menu.classList.contains("open")) {
+            menu.classList.remove("open");
+        }
+    });
+
     return {
         session: () => currentSession,
         roleLabel: (role) => ROLE_LABELS[role] || role,

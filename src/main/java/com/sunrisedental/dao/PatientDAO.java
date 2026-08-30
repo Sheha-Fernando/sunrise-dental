@@ -27,7 +27,7 @@ public class PatientDAO {
      * search may be null/blank for "all".
      */
     public List<PatientSummary> findAllSummaries(String search) throws SQLException {
-        String sql = "SELECT p.patient_id, p.patient_name, p.contact_number, "
+        String sql = "SELECT p.patient_id, p.patient_name, p.contact_number, p.created_at, "
                 + "       lv.appointment_date AS last_visit_date, lv.dentist_name AS last_visit_dentist, "
                 + "       na.appointment_date AS next_appointment_date, na.appointment_time AS next_appointment_time "
                 + "FROM patients p "
@@ -51,7 +51,7 @@ public class PatientDAO {
                 + "    ) y WHERE y.rn = 1"
                 + ") na ON na.patient_id = p.patient_id "
                 + (search != null && !search.isBlank()
-                        ? "WHERE p.patient_name LIKE ? OR p.contact_number LIKE ? "
+                        ? "WHERE p.patient_name LIKE ? OR p.contact_number LIKE ? OR p.patient_id = ? "
                         : "")
                 + "ORDER BY p.patient_name";
 
@@ -59,9 +59,21 @@ public class PatientDAO {
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             if (search != null && !search.isBlank()) {
-                String like = "%" + search.trim() + "%";
+                String trimmed = search.trim();
+                String like = "%" + trimmed + "%";
                 ps.setString(1, like);
                 ps.setString(2, like);
+                // A non-numeric search should never match patient_id = ? (which would
+                // otherwise throw); -1 is a safe sentinel no real patient_id can equal.
+                int idCandidate = -1;
+                if (trimmed.matches("\\d+")) {
+                    try {
+                        idCandidate = Integer.parseInt(trimmed);
+                    } catch (NumberFormatException ignored) {
+                        // trimmed matched \d+ so this can't actually happen; keep -1.
+                    }
+                }
+                ps.setInt(3, idCandidate);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -76,6 +88,8 @@ public class PatientDAO {
                     summary.setNextAppointmentDate(nextDate != null ? nextDate.toLocalDate() : null);
                     Time nextTime = rs.getTime("next_appointment_time");
                     summary.setNextAppointmentTime(nextTime != null ? nextTime.toLocalTime() : null);
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    summary.setRegisteredDate(createdAt != null ? createdAt.toLocalDateTime().toLocalDate() : null);
                     summaries.add(summary);
                 }
             }
@@ -104,6 +118,24 @@ public class PatientDAO {
                 }
                 throw new SQLException("Failed to obtain generated patient_id");
             }
+        }
+    }
+
+    public void update(int patientId, String patientName, String address, String contactNumber) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            update(conn, patientId, patientName, address, contactNumber);
+        }
+    }
+
+    public void update(Connection conn, int patientId, String patientName, String address, String contactNumber)
+            throws SQLException {
+        String sql = "UPDATE patients SET patient_name = ?, address = ?, contact_number = ? WHERE patient_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, patientName);
+            ps.setString(2, address);
+            ps.setString(3, contactNumber);
+            ps.setInt(4, patientId);
+            ps.executeUpdate();
         }
     }
 

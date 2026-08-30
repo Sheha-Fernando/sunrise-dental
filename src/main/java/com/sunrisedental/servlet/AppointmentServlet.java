@@ -46,7 +46,6 @@ public class AppointmentServlet extends HttpServlet {
         try {
             AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST);
 
-            String appointmentNumber = req.getParameter("appointmentNumber");
             String patientIdParam = req.getParameter("patientId");
             Integer patientId = (patientIdParam == null || patientIdParam.isBlank())
                     ? null : Integer.valueOf(patientIdParam);
@@ -61,7 +60,7 @@ public class AppointmentServlet extends HttpServlet {
             Integer createdBy = (session != null) ? (Integer) session.getAttribute("userId") : null;
 
             NewAppointmentRequest request = new NewAppointmentRequest(
-                    appointmentNumber, patientId, patientName, address, contactNumber,
+                    patientId, patientName, address, contactNumber,
                     dentistId, treatmentId, date, time, createdBy);
 
             Appointment appointment = appointmentService.createAppointment(request);
@@ -164,6 +163,7 @@ public class AppointmentServlet extends HttpServlet {
     private Map<String, Object> toJson(Appointment appointment) {
         Map<String, Object> json = new LinkedHashMap<>();
         json.put("appointmentNumber", appointment.getAppointmentNumber());
+        json.put("patientId", appointment.getPatient().getPatientId());
         json.put("patientName", appointment.getPatient().getPatientName());
         json.put("address", appointment.getPatient().getAddress());
         json.put("contactNumber", appointment.getPatient().getContactNumber());

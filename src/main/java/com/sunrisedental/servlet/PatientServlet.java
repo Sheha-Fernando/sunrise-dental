@@ -31,6 +31,10 @@ import java.util.logging.Logger;
  *   GET  /api/patients?q=            - search/list (ADMIN/RECEPTIONIST/BILLING)
  *   GET  /api/patients/{id}          - profile + appointment history
  *   POST /api/patients               - register a new patient (ADMIN/RECEPTIONIST)
+ *   PUT  /api/patients/{id}          - edit demographic/contact info (ADMIN/RECEPTIONIST only -
+ *        DENTIST/CLINICAL_ASSISTANT/BILLING are read-only, enforced here, not just hidden in the UI)
+ *        (?patientName=&address=&contactNumber= as query params - PUT bodies aren't
+ *        auto-parsed as form params by the Servlet API, same convention as /api/staff/{id})
  */
 @WebServlet("/api/patients/*")
 public class PatientServlet extends HttpServlet {
@@ -121,6 +125,43 @@ public class PatientServlet extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        resp.setContentType("application/json");
+        try {
+            AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST);
+
+            String pathInfo = req.getPathInfo();
+            if (pathInfo == null || pathInfo.length() <= 1) {
+                throw new BusinessException("Patient ID is required.");
+            }
+            int patientId;
+            try {
+                patientId = Integer.parseInt(pathInfo.substring(1));
+            } catch (NumberFormatException e) {
+                throw new BusinessException("Invalid patient ID.");
+            }
+
+            Patient updated = patientService.update(patientId,
+                    req.getParameter("patientName"), req.getParameter("address"), req.getParameter("contactNumber"));
+
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("status", "success");
+            body.put("message", "Patient details updated successfully.");
+            body.put("patient", toJson(updated));
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(JsonUtil.write(body));
+        } catch (ForbiddenException e) {
+            writeError(resp, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+        } catch (BusinessException e) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Unexpected error updating patient", e);
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to update patient right now.");
+        }
+    }
+
     private Map<String, Object> toJson(PatientSummary summary) {
         Map<String, Object> json = new LinkedHashMap<>();
         json.put("patientId", summary.getPatientId());
@@ -133,6 +174,8 @@ public class PatientServlet extends HttpServlet {
                 summary.getNextAppointmentDate() != null ? summary.getNextAppointmentDate().toString() : null);
         json.put("nextAppointmentTime",
                 summary.getNextAppointmentTime() != null ? summary.getNextAppointmentTime().toString() : null);
+        json.put("registeredDate",
+                summary.getRegisteredDate() != null ? summary.getRegisteredDate().toString() : null);
         return json;
     }
 

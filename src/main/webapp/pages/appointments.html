@@ -21,9 +21,12 @@
 
     <div class="toolbar">
         <div class="toolbar-search">
-            <input type="search" id="filterSearch" placeholder="Search by patient name...">
+            <input type="search" id="filterSearch" placeholder="Search by patient name or appointment number...">
         </div>
         <input type="date" id="filterDate">
+        <select id="filterDentist" style="display:none;">
+            <option value="">All dentists</option>
+        </select>
         <select id="filterStatus">
             <option value="">All statuses</option>
             <option value="SCHEDULED">Scheduled</option>

@@ -20,7 +20,6 @@
         dateInput.min = new Date().toISOString().split("T")[0];
 
         const fields = [
-            { input: document.getElementById("appointmentNumber"), error: document.getElementById("appointmentNumberError") },
             { input: dentistSelect, error: document.getElementById("dentistIdError") },
             { input: treatmentSelect, error: document.getElementById("treatmentIdError") },
             { input: dateInput, error: document.getElementById("appointmentDateError") },
@@ -164,28 +163,59 @@
             return div.innerHTML;
         }
 
-        // --- Availability pre-check -----------------------------------------------------
+        // --- Availability grid -----------------------------------------------------
+        // Shows every standard clinic slot as Available/Booked as soon as a dentist
+        // and date are both chosen, so staff never have to guess or manually probe
+        // a time - clicking an available slot fills the Time field. The backend's
+        // UNIQUE constraint remains the real, authoritative protection against a
+        // double-booking race; this is purely a "don't make staff guess" convenience.
+        const CLINIC_TIMES = ["08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+            "13:30", "14:00", "14:30", "15:00", "15:30", "16:00"];
 
-        document.getElementById("checkAvailabilityBtn").addEventListener("click", async () => {
-            const resultEl = document.getElementById("availabilityResult");
+        const availabilityGroup = document.getElementById("availabilityGroup");
+        const availabilityGrid = document.getElementById("availabilityGrid");
+
+        async function refreshAvailability() {
             const dentistId = dentistSelect.value;
             const date = dateInput.value;
-            const time = timeInput.value;
-            if (!dentistId || !date || !time) {
-                resultEl.innerHTML = `<div class="field-error visible">Select a dentist, date and time first.</div>`;
+            if (!dentistId || !date) {
+                availabilityGroup.style.display = "none";
                 return;
             }
-            resultEl.innerHTML = `<div class="loading-inline"><span class="spinner"></span> Checking...</div>`;
+            availabilityGroup.style.display = "block";
+            availabilityGrid.innerHTML = `<div class="loading-inline"><span class="spinner"></span> Checking availability...</div>`;
             try {
                 const existing = await Api.get(`/appointments?date=${date}&dentistId=${dentistId}`);
-                const clash = existing.find(a => a.appointmentTime.startsWith(time) && a.status !== "CANCELLED");
-                resultEl.innerHTML = clash
-                    ? `<div class="alert alert-error visible">This slot is already booked. Please choose another time.</div>`
-                    : `<div class="alert alert-success visible">This slot is available.</div>`;
+                const bookedTimes = new Set(existing.filter(a => a.status !== "CANCELLED")
+                    .map(a => a.appointmentTime.slice(0, 5)));
+                renderAvailabilityGrid(bookedTimes);
             } catch (err) {
-                resultEl.innerHTML = `<div class="field-error visible">${escapeHtml(err.message)}</div>`;
+                availabilityGrid.innerHTML = `<div class="field-error visible">${escapeHtml(err.message)}</div>`;
             }
-        });
+        }
+
+        function renderAvailabilityGrid(bookedTimes) {
+            availabilityGrid.innerHTML = CLINIC_TIMES.map(t => {
+                const isBooked = bookedTimes.has(t);
+                const isSelected = timeInput.value === t;
+                const classes = ["availability-slot"];
+                if (isBooked) classes.push("booked");
+                if (isSelected && !isBooked) classes.push("selected");
+                return `<button type="button" class="${classes.join(" ")}" data-time="${t}" ${isBooked ? "disabled" : ""}>${Fmt.time(t)}</button>`;
+            }).join("");
+
+            availabilityGrid.querySelectorAll(".availability-slot:not(.booked)").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    timeInput.value = btn.dataset.time;
+                    setFieldError({ input: timeInput, error: document.getElementById("appointmentTimeError") }, false);
+                    availabilityGrid.querySelectorAll(".availability-slot").forEach(b => b.classList.remove("selected"));
+                    btn.classList.add("selected");
+                });
+            });
+        }
+
+        dentistSelect.addEventListener("change", refreshAvailability);
+        dateInput.addEventListener("change", refreshAvailability);
 
         // --- Validation + submit -----------------------------------------------------
 
@@ -232,11 +262,14 @@
             document.getElementById("viewAppointmentBtn").onclick = () => {
                 window.location.href = "search.html?number=" + encodeURIComponent(appointment.appointmentNumber);
             };
+            document.getElementById("viewPatientBtn").onclick = () => {
+                window.location.href = "patients.html?id=" + appointment.patientId;
+            };
             document.getElementById("registerAnotherBtn").onclick = () => {
                 window.location.reload();
             };
             successPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-            Toast.success("Appointment registered successfully.");
+            Toast.success("Appointment booked successfully.");
         }
 
         form.addEventListener("submit", async (event) => {
@@ -251,7 +284,6 @@
             submitButton.textContent = "Registering...";
 
             const payload = {
-                appointmentNumber: document.getElementById("appointmentNumber").value.trim(),
                 dentistId: dentistSelect.value,
                 treatmentId: treatmentSelect.value,
                 appointmentDate: dateInput.value,

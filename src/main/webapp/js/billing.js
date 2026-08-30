@@ -131,12 +131,14 @@
         return div.innerHTML;
     }
 
+    let allBills = [];
+
     async function loadRecentBills() {
         const container = document.getElementById("recentBillsContainer");
         try {
-            const bills = await Api.get("/bills");
+            allBills = await Api.get("/bills");
             const todayIso = new Date().toISOString().split("T")[0];
-            const todaysBills = bills.filter(b => b.billDate.startsWith(todayIso));
+            const todaysBills = allBills.filter(b => b.billDate.startsWith(todayIso));
             const revenue = todaysBills.reduce((sum, b) => sum + Number(b.totalAmount), 0);
 
             document.getElementById("statCards").innerHTML = `
@@ -144,27 +146,47 @@
                 <div class="stat-card"><div class="stat-label">Today's Revenue</div><div class="stat-value accent">${Fmt.currency(revenue)}</div></div>
             `;
 
-            if (bills.length === 0) {
-                container.innerHTML = `<div class="empty-state"><div class="empty-title">No bills found</div></div>`;
-                return;
-            }
-            const rows = bills.map(b => `
-                <tr class="clickable" onclick="window.location.href='billing.html?number=${encodeURIComponent(b.appointmentNumber)}'">
-                    <td class="table-primary-text">${escapeHtml(b.appointmentNumber)}</td>
-                    <td>${escapeHtml(b.patientName)}</td>
-                    <td>${escapeHtml(b.dentistName)}</td>
-                    <td>${Fmt.currency(b.totalAmount)}</td>
-                    <td class="table-muted-text">${b.billDate.replace("T", " ")}</td>
-                </tr>`).join("");
-            container.innerHTML = `<div class="table-wrap"><table class="data-table">
-                <thead><tr><th>Appointment #</th><th>Patient</th><th>Dentist</th><th>Total</th><th>Bill Date</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table></div>`;
+            document.getElementById("billSearch").addEventListener("input", renderBillList);
+            renderBillList();
         } catch (err) {
             container.innerHTML = `<div class="empty-state">
                 <div class="empty-title">We couldn't load recent bills</div>
                 <div class="empty-desc">${escapeHtml(err.message || "Please try again.")}</div>
             </div>`;
         }
+    }
+
+    function renderBillList() {
+        const container = document.getElementById("recentBillsContainer");
+        const search = document.getElementById("billSearch").value.trim().toLowerCase();
+
+        const filtered = search
+            ? allBills.filter(b => b.patientName.toLowerCase().includes(search)
+                || b.appointmentNumber.toLowerCase().includes(search))
+            : allBills;
+
+        if (allBills.length === 0) {
+            container.innerHTML = `<div class="empty-state"><div class="empty-title">No bills found</div></div>`;
+            return;
+        }
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="empty-state">
+                <div class="empty-title">No bills found</div>
+                <div class="empty-desc">Try a different patient name or appointment number.</div>
+            </div>`;
+            return;
+        }
+        const rows = filtered.map(b => `
+            <tr class="clickable" onclick="window.location.href='billing.html?number=${encodeURIComponent(b.appointmentNumber)}'">
+                <td class="table-primary-text">${escapeHtml(b.appointmentNumber)}</td>
+                <td>${escapeHtml(b.patientName)}</td>
+                <td>${escapeHtml(b.dentistName)}</td>
+                <td>${Fmt.currency(b.totalAmount)}</td>
+                <td class="table-muted-text">${b.billDate.replace("T", " ")}</td>
+            </tr>`).join("");
+        container.innerHTML = `<div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Appointment #</th><th>Patient</th><th>Dentist</th><th>Total</th><th>Bill Date</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table></div>`;
     }
 })();
