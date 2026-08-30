@@ -91,22 +91,33 @@
             <tr ${clickable ? `class="clickable" onclick="window.location.href='patients.html?id=${p.patientId}'"` : ""}>
                 <td class="table-primary-text">${escapeHtml(p.patientName)}</td>
                 <td>${escapeHtml(p.contactNumber)}</td>
-                <td>${p.lastAppointmentDate ? Fmt.date(p.lastAppointmentDate) : "&mdash;"}</td>
+                <td>${p.assignedDentistName ? escapeHtml(p.assignedDentistName) : "&mdash;"}</td>
+                <td>${p.lastVisitDate ? Fmt.date(p.lastVisitDate) : "&mdash;"}</td>
+                <td>${p.nextAppointmentDate ? Fmt.date(p.nextAppointmentDate) + (p.nextAppointmentTime ? " &middot; " + Fmt.time(p.nextAppointmentTime) : "") : "&mdash;"}</td>
                 <td><span class="badge badge-active">Active</span></td>
             </tr>`).join("");
         container.innerHTML = `<div class="table-wrap"><table class="data-table">
-            <thead><tr><th>Patient</th><th>Contact</th><th>Last Appointment</th><th>Status</th></tr></thead>
+            <thead><tr><th>Patient</th><th>Contact</th><th>Assigned Dentist</th><th>Last Visit</th><th>Next Appointment</th><th>Status</th></tr></thead>
             <tbody>${rows}</tbody>
         </table></div>`;
     }
 
     let dentistPatients = [];
+    let ownDentistName = "";
 
     async function loadDentistPatients() {
         const container = document.getElementById("listContainer");
         container.innerHTML = `<div class="loading-inline"><span class="spinner"></span> Loading patients...</div>`;
         try {
-            const appointments = await Api.get("/appointments");
+            const [appointments, dentists] = await Promise.all([
+                Api.get("/appointments"),
+                Api.get("/dentists"),
+            ]);
+            const ownDentistId = session.role === "DENTIST" ? session.dentistId : session.assignedDentistId;
+            const ownDentist = dentists.find(d => d.dentistId === ownDentistId);
+            ownDentistName = ownDentist ? ownDentist.dentistName : "";
+
+            const now = new Date();
             const byName = new Map();
             for (const a of appointments) {
                 const key = a.patientName + "|" + a.contactNumber;
@@ -114,17 +125,26 @@
                     byName.set(key, {
                         patientName: a.patientName,
                         contactNumber: a.contactNumber,
-                        lastAppointmentDate: a.appointmentDate,
-                        appointmentNumber: a.appointmentNumber,
-                        appointmentCount: 1,
+                        lastVisitDate: null,
+                        lastVisitNumber: null,
+                        nextAppointmentDate: null,
+                        nextAppointmentTime: null,
+                        nextAppointmentNumber: null,
                     });
-                } else {
-                    const existing = byName.get(key);
-                    existing.appointmentCount++;
-                    if (a.appointmentDate > existing.lastAppointmentDate) {
-                        existing.lastAppointmentDate = a.appointmentDate;
-                        existing.appointmentNumber = a.appointmentNumber;
+                }
+                const entry = byName.get(key);
+                const isFuture = new Date(a.appointmentDate + "T" + a.appointmentTime) >= now;
+                if (a.status === "SCHEDULED" && isFuture) {
+                    if (!entry.nextAppointmentDate
+                            || (a.appointmentDate + a.appointmentTime) < (entry.nextAppointmentDate + entry.nextAppointmentTime)) {
+                        entry.nextAppointmentDate = a.appointmentDate;
+                        entry.nextAppointmentTime = a.appointmentTime;
+                        entry.nextAppointmentNumber = a.appointmentNumber;
                     }
+                }
+                if (a.status !== "CANCELLED" && (!entry.lastVisitDate || a.appointmentDate > entry.lastVisitDate)) {
+                    entry.lastVisitDate = a.appointmentDate;
+                    entry.lastVisitNumber = a.appointmentNumber;
                 }
             }
             dentistPatients = [...byName.values()].sort((a, b) => a.patientName.localeCompare(b.patientName));
@@ -149,15 +169,20 @@
             </div>`;
             return;
         }
-        const rows = filtered.map(p => `
-            <tr class="clickable" onclick="window.location.href='search.html?number=${encodeURIComponent(p.appointmentNumber)}'">
+        const rows = filtered.map(p => {
+            const targetNumber = p.nextAppointmentNumber || p.lastVisitNumber;
+            return `
+            <tr class="clickable" onclick="window.location.href='search.html?number=${encodeURIComponent(targetNumber)}'">
                 <td class="table-primary-text">${escapeHtml(p.patientName)}</td>
                 <td>${escapeHtml(p.contactNumber)}</td>
-                <td>${Fmt.date(p.lastAppointmentDate)}</td>
-                <td>${p.appointmentCount}</td>
-            </tr>`).join("");
+                <td>${escapeHtml(ownDentistName)}</td>
+                <td>${p.lastVisitDate ? Fmt.date(p.lastVisitDate) : "&mdash;"}</td>
+                <td>${p.nextAppointmentDate ? Fmt.date(p.nextAppointmentDate) + " &middot; " + Fmt.time(p.nextAppointmentTime) : "&mdash;"}</td>
+                <td><span class="badge badge-active">Active</span></td>
+            </tr>`;
+        }).join("");
         container.innerHTML = `<div class="table-wrap"><table class="data-table">
-            <thead><tr><th>Patient</th><th>Contact</th><th>Last Appointment</th><th>Visits</th></tr></thead>
+            <thead><tr><th>Patient</th><th>Contact</th><th>Assigned Dentist</th><th>Last Visit</th><th>Next Appointment</th><th>Status</th></tr></thead>
             <tbody>${rows}</tbody>
         </table></div>`;
     }

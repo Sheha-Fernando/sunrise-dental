@@ -1,18 +1,26 @@
 package com.sunrisedental.model;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * Read-only projection for the patients list screen - a patient plus
- * derived appointment stats. Not a persisted entity in its own right.
+ * derived appointment info. Not a persisted entity in its own right.
+ *
+ * "Assigned dentist" has no dedicated column on patients (a patient can see
+ * several dentists over time) - it is derived here as the dentist from the
+ * patient's most recent non-cancelled visit, which is what the previous
+ * appointment history actually shows.
  */
 public class PatientSummary {
 
     private int patientId;
     private String patientName;
     private String contactNumber;
-    private LocalDate lastAppointmentDate;
-    private int appointmentCount;
+    private String assignedDentistName;
+    private LocalDate lastVisitDate;
+    private LocalDate nextAppointmentDate;
+    private LocalTime nextAppointmentTime;
 
     public int getPatientId() {
         return patientId;
@@ -38,19 +46,35 @@ public class PatientSummary {
         this.contactNumber = contactNumber;
     }
 
-    public LocalDate getLastAppointmentDate() {
-        return lastAppointmentDate;
+    public String getAssignedDentistName() {
+        return assignedDentistName;
     }
 
-    public void setLastAppointmentDate(LocalDate lastAppointmentDate) {
-        this.lastAppointmentDate = lastAppointmentDate;
+    public void setAssignedDentistName(String assignedDentistName) {
+        this.assignedDentistName = assignedDentistName;
     }
 
-    public int getAppointmentCount() {
-        return appointmentCount;
+    public LocalDate getLastVisitDate() {
+        return lastVisitDate;
     }
 
-    public void setAppointmentCount(int appointmentCount) {
-        this.appointmentCount = appointmentCount;
+    public void setLastVisitDate(LocalDate lastVisitDate) {
+        this.lastVisitDate = lastVisitDate;
+    }
+
+    public LocalDate getNextAppointmentDate() {
+        return nextAppointmentDate;
+    }
+
+    public void setNextAppointmentDate(LocalDate nextAppointmentDate) {
+        this.nextAppointmentDate = nextAppointmentDate;
+    }
+
+    public LocalTime getNextAppointmentTime() {
+        return nextAppointmentTime;
+    }
+
+    public void setNextAppointmentTime(LocalTime nextAppointmentTime) {
+        this.nextAppointmentTime = nextAppointmentTime;
     }
 }

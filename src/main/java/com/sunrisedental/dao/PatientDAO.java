@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,19 +19,40 @@ import java.util.Optional;
 public class PatientDAO {
 
     /**
-     * Patients list screen: name/contact search plus last-visit and visit
-     * count derived from appointments. search may be null/blank for "all".
+     * Patients list screen: name/contact search, plus the dentist and date
+     * of the patient's most recent non-cancelled visit ("assigned dentist" /
+     * "last visit" - there is no dedicated dentist assignment column, since
+     * a patient can see several dentists over time), and their nearest
+     * upcoming scheduled appointment ("next appointment"), if any.
+     * search may be null/blank for "all".
      */
     public List<PatientSummary> findAllSummaries(String search) throws SQLException {
         String sql = "SELECT p.patient_id, p.patient_name, p.contact_number, "
-                + "       MAX(a.appointment_date) AS last_appointment_date, "
-                + "       COUNT(a.appointment_id) AS appointment_count "
+                + "       lv.appointment_date AS last_visit_date, lv.dentist_name AS last_visit_dentist, "
+                + "       na.appointment_date AS next_appointment_date, na.appointment_time AS next_appointment_time "
                 + "FROM patients p "
-                + "LEFT JOIN appointments a ON a.patient_id = p.patient_id "
+                + "LEFT JOIN ("
+                + "    SELECT x.patient_id, x.appointment_date, x.dentist_name FROM ("
+                + "        SELECT a.patient_id, a.appointment_date, d.dentist_name, "
+                + "               ROW_NUMBER() OVER (PARTITION BY a.patient_id "
+                + "                   ORDER BY a.appointment_date DESC, a.appointment_time DESC) AS rn "
+                + "        FROM appointments a JOIN dentists d ON a.dentist_id = d.dentist_id "
+                + "        WHERE a.status <> 'CANCELLED'"
+                + "    ) x WHERE x.rn = 1"
+                + ") lv ON lv.patient_id = p.patient_id "
+                + "LEFT JOIN ("
+                + "    SELECT y.patient_id, y.appointment_date, y.appointment_time FROM ("
+                + "        SELECT a.patient_id, a.appointment_date, a.appointment_time, "
+                + "               ROW_NUMBER() OVER (PARTITION BY a.patient_id "
+                + "                   ORDER BY a.appointment_date ASC, a.appointment_time ASC) AS rn "
+                + "        FROM appointments a "
+                + "        WHERE a.status = 'SCHEDULED' "
+                + "          AND TIMESTAMP(a.appointment_date, a.appointment_time) >= NOW()"
+                + "    ) y WHERE y.rn = 1"
+                + ") na ON na.patient_id = p.patient_id "
                 + (search != null && !search.isBlank()
                         ? "WHERE p.patient_name LIKE ? OR p.contact_number LIKE ? "
                         : "")
-                + "GROUP BY p.patient_id, p.patient_name, p.contact_number "
                 + "ORDER BY p.patient_name";
 
         List<PatientSummary> summaries = new ArrayList<>();
@@ -47,9 +69,13 @@ public class PatientDAO {
                     summary.setPatientId(rs.getInt("patient_id"));
                     summary.setPatientName(rs.getString("patient_name"));
                     summary.setContactNumber(rs.getString("contact_number"));
-                    Date lastDate = rs.getDate("last_appointment_date");
-                    summary.setLastAppointmentDate(lastDate != null ? lastDate.toLocalDate() : null);
-                    summary.setAppointmentCount(rs.getInt("appointment_count"));
+                    summary.setAssignedDentistName(rs.getString("last_visit_dentist"));
+                    Date lastVisit = rs.getDate("last_visit_date");
+                    summary.setLastVisitDate(lastVisit != null ? lastVisit.toLocalDate() : null);
+                    Date nextDate = rs.getDate("next_appointment_date");
+                    summary.setNextAppointmentDate(nextDate != null ? nextDate.toLocalDate() : null);
+                    Time nextTime = rs.getTime("next_appointment_time");
+                    summary.setNextAppointmentTime(nextTime != null ? nextTime.toLocalTime() : null);
                     summaries.add(summary);
                 }
             }

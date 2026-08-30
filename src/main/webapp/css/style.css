@@ -14,12 +14,12 @@
     --color-danger: #A6403A;
     --color-danger-bg: #FBEEED;
     --color-danger-border: #E9CBC8;
-    --color-success: #3E6B4F;
-    --color-success-bg: #EBF3EE;
-    --color-success-border: #C9DECF;
-    --color-info: #3D5A73;
-    --color-info-bg: #EBF1F5;
-    --color-info-border: #C9D8E3;
+    --color-success: #1E7A4B;
+    --color-success-bg: #E3F3E9;
+    --color-success-border: #A9DABE;
+    --color-info: #1D5D95;
+    --color-info-bg: #E3EDF7;
+    --color-info-border: #A9C8E3;
 
     --radius: 8px;
     --radius-sm: 5px;
@@ -684,25 +684,56 @@ select[aria-invalid="true"] {
 /* ===================== Badges ===================== */
 
 .badge {
-    display: inline-block;
-    padding: 0.18rem 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem 0.2rem 0.5rem;
     border-radius: 999px;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.03em;
     white-space: nowrap;
+    border: 1px solid transparent;
 }
 
-.badge-scheduled { background: var(--color-info-bg); color: var(--color-info); }
-.badge-confirmed { background: var(--color-info-bg); color: var(--color-info); }
-.badge-checked_in { background: var(--color-accent-tint); color: var(--color-accent-dark); }
-.badge-in_treatment { background: var(--color-accent-tint); color: var(--color-accent-dark); }
-.badge-completed { background: var(--color-success-bg); color: var(--color-success); }
-.badge-cancelled { background: var(--color-danger-bg); color: var(--color-danger); }
-.badge-no_show { background: var(--color-danger-bg); color: var(--color-danger); }
-.badge-active { background: var(--color-success-bg); color: var(--color-success); }
-.badge-inactive { background: var(--color-surface-sunken); color: var(--color-text-muted); }
+/* A colored dot (matches the badge's own text color) plus a matching border
+   give each status three simultaneous, non-color-only signals - the dot,
+   the border, and the word itself - not just a subtle background tint. */
+.badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.badge-scheduled, .badge-confirmed {
+    background: var(--color-info-bg);
+    color: var(--color-info);
+    border-color: var(--color-info-border);
+}
+.badge-checked_in, .badge-in_treatment {
+    background: var(--color-accent-tint);
+    color: var(--color-accent-dark);
+    border-color: var(--color-accent);
+}
+.badge-completed, .badge-active {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    border-color: var(--color-success-border);
+}
+.badge-cancelled, .badge-no_show {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border-color: var(--color-danger-border);
+}
+.badge-inactive {
+    background: var(--color-surface-sunken);
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
+}
 
 /* ===================== Tables ===================== */
 

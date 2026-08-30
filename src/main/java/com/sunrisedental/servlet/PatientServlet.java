@@ -126,9 +126,13 @@ public class PatientServlet extends HttpServlet {
         json.put("patientId", summary.getPatientId());
         json.put("patientName", summary.getPatientName());
         json.put("contactNumber", summary.getContactNumber());
-        json.put("lastAppointmentDate",
-                summary.getLastAppointmentDate() != null ? summary.getLastAppointmentDate().toString() : null);
-        json.put("appointmentCount", summary.getAppointmentCount());
+        json.put("assignedDentistName", summary.getAssignedDentistName());
+        json.put("lastVisitDate",
+                summary.getLastVisitDate() != null ? summary.getLastVisitDate().toString() : null);
+        json.put("nextAppointmentDate",
+                summary.getNextAppointmentDate() != null ? summary.getNextAppointmentDate().toString() : null);
+        json.put("nextAppointmentTime",
+                summary.getNextAppointmentTime() != null ? summary.getNextAppointmentTime().toString() : null);
         return json;
     }
 
