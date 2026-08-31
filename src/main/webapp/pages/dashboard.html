@@ -18,16 +18,20 @@
         </div>
     </div>
 
-    <div class="card" id="statusSummaryCard" style="margin-bottom:1.25rem; display:none;">
-        <h2 class="section-title">Appointment Status Summary</h2>
-        <div id="statusSummaryContainer" class="status-summary-row"></div>
+    <div class="summary-grid" id="summaryGridRow" style="display:none; margin-bottom:1.25rem;">
+        <div class="card" id="statusSummaryCard">
+            <h2 class="section-title">Appointment Status Summary</h2>
+            <div id="statusSummaryContainer" class="status-summary-row"></div>
+        </div>
+
+        <div class="card" id="clinicOverviewCard">
+            <h2 class="section-title">Clinic Overview</h2>
+            <div id="clinicOverviewContainer" class="status-summary-row"></div>
+        </div>
     </div>
 
-    <div class="card-row" id="statCards"></div>
-
-    <div class="card" id="clinicOverviewCard" style="margin-top:1.25rem; display:none;">
-        <h2 class="section-title">Clinic Overview</h2>
-        <div id="clinicOverviewContainer" class="status-summary-row"></div>
+    <div class="card" id="statCardsCard" style="margin-bottom:1.25rem;">
+        <div id="statCards" class="status-summary-row"></div>
     </div>
 
     <div id="chartsSection" style="display:none;"></div>
@@ -57,6 +61,7 @@
 <script src="../js/api.js"></script>
 <script src="../js/format.js"></script>
 <script src="../js/shell.js"></script>
+<script src="../js/metrics.js"></script>
 <script src="../js/dashboard.js"></script>
 </body>
 </html>

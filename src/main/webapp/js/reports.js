@@ -7,13 +7,6 @@
         return div.innerHTML;
     }
 
-    function statCard(label, value, accent) {
-        return `<div class="stat-card">
-            <div class="stat-label">${label}</div>
-            <div class="stat-value${accent ? " accent" : ""}">${value}</div>
-        </div>`;
-    }
-
     function init() {
         const content = document.getElementById("pageContent");
         content.appendChild(document.getElementById("pageTemplate").content.cloneNode(true));
@@ -32,18 +25,20 @@
             const cancelled = appointments.filter(a => a.status === "CANCELLED").length;
             const scheduled = appointments.filter(a => a.status === "SCHEDULED").length;
 
-            document.getElementById("appointmentStats").innerHTML =
-                statCard("Total Appointments", appointments.length) +
-                statCard("Scheduled", scheduled) +
-                statCard("Completed", completed) +
-                statCard("Cancelled", cancelled) +
-                statCard("Total Patients", patients.length);
+            Metrics.render(document.getElementById("appointmentStats"), [
+                { label: "Total Appointments", value: appointments.length },
+                { label: "Scheduled", value: scheduled },
+                { label: "Completed", value: completed },
+                { label: "Cancelled", value: cancelled },
+                { label: "Total Patients", value: patients.length },
+            ]);
 
             const totalRevenue = bills.reduce((sum, b) => sum + Number(b.totalAmount), 0);
-            document.getElementById("revenueStats").innerHTML =
-                statCard("Total Revenue", Fmt.currency(totalRevenue), true) +
-                statCard("Bills Generated", bills.length) +
-                statCard("Average Bill", bills.length ? Fmt.currency(totalRevenue / bills.length) : Fmt.currency(0));
+            Metrics.render(document.getElementById("revenueStats"), [
+                { label: "Total Revenue", value: Fmt.currency(totalRevenue), color: "#B89552" },
+                { label: "Bills Generated", value: bills.length },
+                { label: "Average Bill", value: bills.length ? Fmt.currency(totalRevenue / bills.length) : Fmt.currency(0) },
+            ]);
 
             const treatmentCounts = new Map();
             for (const a of appointments) {

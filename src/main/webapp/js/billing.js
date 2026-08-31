@@ -8,13 +8,11 @@
         content.appendChild(document.getElementById("pageTemplate").content.cloneNode(true));
 
         const lookupForm = document.getElementById("lookupForm");
-        const lookupCard = document.getElementById("lookupCard");
         const numberInput = document.getElementById("appointmentNumber");
         const numberError = document.getElementById("appointmentNumberError");
         const lookupButton = document.getElementById("lookupButton");
         const billingAlert = document.getElementById("billingAlert");
         const appointmentSummary = document.getElementById("appointmentSummary");
-        const receiptCard = document.getElementById("receiptCard");
         const generateBillBtn = document.getElementById("generateBillBtn");
         const printBillBtn = document.getElementById("printBillBtn");
 
@@ -28,28 +26,38 @@
             billingAlert.textContent = "";
         }
 
+        function formatBillDate(billDate) {
+            if (!billDate) return "";
+            const [datePart, timePart] = billDate.split("T");
+            return timePart ? `${Fmt.date(datePart)} · ${Fmt.time(timePart)}` : Fmt.date(datePart);
+        }
+
         function renderAppointmentSummary(appointment) {
             currentAppointment = appointment;
             appointmentSummary.style.display = "block";
-            receiptCard.style.display = "none";
-            document.getElementById("summaryPatient").textContent = appointment.patientName;
-            document.getElementById("summaryDentist").textContent = appointment.dentistName;
-            document.getElementById("summaryTreatment").textContent = appointment.treatmentType;
-            document.getElementById("summaryStatus").innerHTML =
+            document.getElementById("summaryPatientLine").textContent =
+                `${appointment.patientName} · ${appointment.appointmentNumber}`;
+            document.getElementById("summaryMetaLine").textContent =
+                `${appointment.treatmentType} · ${appointment.dentistName} · `
+                + `${Fmt.date(appointment.appointmentDate)}, ${Fmt.time(appointment.appointmentTime)}`;
+            document.getElementById("summaryRight").innerHTML =
                 `<span class="${Fmt.statusBadgeClass(appointment.status)}">${Fmt.statusLabel(appointment.status)}</span>`;
+            generateBillBtn.style.display = "inline-flex";
+            printBillBtn.style.display = "none";
         }
 
         function renderReceipt(appointment, bill) {
-            lookupCard.style.display = "none";
-            appointmentSummary.style.display = "none";
             billingAlert.classList.remove("visible");
-            receiptCard.style.display = "block";
+            document.getElementById("summaryRight").innerHTML =
+                `<span class="table-primary-text">${Fmt.currency(bill.totalAmount)}</span>`;
+            generateBillBtn.style.display = "none";
+            printBillBtn.style.display = "inline-flex";
 
             document.getElementById("billNumber").textContent = appointment.appointmentNumber;
             document.getElementById("billPatient").textContent = appointment.patientName;
             document.getElementById("billDentist").textContent = appointment.dentistName;
             document.getElementById("billTreatment").textContent = appointment.treatmentType;
-            document.getElementById("billDate").textContent = bill.billDate ? bill.billDate.replace("T", " ") : "";
+            document.getElementById("billDate").textContent = formatBillDate(bill.billDate);
             document.getElementById("billConsultation").textContent = Fmt.currency(bill.consultationFee);
             document.getElementById("billTreatmentCost").textContent = Fmt.currency(bill.treatmentCost);
             document.getElementById("billTotal").textContent = Fmt.currency(bill.totalAmount);
@@ -141,10 +149,10 @@
             const todaysBills = allBills.filter(b => b.billDate.startsWith(todayIso));
             const revenue = todaysBills.reduce((sum, b) => sum + Number(b.totalAmount), 0);
 
-            document.getElementById("statCards").innerHTML = `
-                <div class="stat-card"><div class="stat-label">Today's Bills</div><div class="stat-value">${todaysBills.length}</div></div>
-                <div class="stat-card"><div class="stat-label">Today's Revenue</div><div class="stat-value accent">${Fmt.currency(revenue)}</div></div>
-            `;
+            document.getElementById("statCards").innerHTML = Metrics.row([
+                { label: "Today's Bills", value: todaysBills.length },
+                { label: "Today's Revenue", value: Fmt.currency(revenue), color: "#B89552" },
+            ]);
 
             document.getElementById("billSearch").addEventListener("input", renderBillList);
             renderBillList();

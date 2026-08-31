@@ -35,7 +35,9 @@ public class DentistServlet extends HttpServlet {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("dentistId", d.getDentistId());
                 item.put("dentistName", d.getDentistName());
+                item.put("specialty", d.getSpecialty());
                 item.put("contactNumber", d.getContactNumber());
+                item.put("email", d.getEmail());
                 body.add(item);
             }
             resp.setStatus(HttpServletResponse.SC_OK);

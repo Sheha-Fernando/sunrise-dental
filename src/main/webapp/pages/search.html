@@ -69,11 +69,16 @@
                 <div class="detail-label">Time</div>
                 <div class="detail-value" id="resultTime"></div>
             </div>
+            <div class="detail-item" id="resultReasonGroup" style="grid-column: 1 / -1; display:none;">
+                <div class="detail-label">Cancellation Reason</div>
+                <div class="detail-value" id="resultReason"></div>
+            </div>
         </div>
+
+        <div class="btn-row" id="resultActions" style="flex-wrap:wrap;"></div>
 
         <div class="btn-row">
             <a href="appointments.html" class="btn btn-secondary">Back to Appointments</a>
-            <button type="button" class="btn btn-primary" id="generateBillBtn" style="display:none;">Generate Bill</button>
         </div>
     </div>
 </template>
@@ -81,6 +86,8 @@
 <script src="../js/api.js"></script>
 <script src="../js/format.js"></script>
 <script src="../js/shell.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/appointment-actions.js"></script>
 <script src="../js/search.js"></script>
 </body>
 </html>

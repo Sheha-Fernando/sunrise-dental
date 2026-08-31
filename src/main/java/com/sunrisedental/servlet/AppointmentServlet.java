@@ -84,6 +84,109 @@ public class AppointmentServlet extends HttpServlet {
     }
 
     @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        resp.setContentType("application/json");
+        String pathInfo = req.getPathInfo();
+        String[] segments = (pathInfo == null) ? new String[0] : pathInfo.split("/");
+        // pathInfo "/{number}/status" or "/{number}/reschedule" splits to ["", number, action]
+        if (segments.length != 3) {
+            writeError(resp, HttpServletResponse.SC_NOT_FOUND, "We couldn't find that appointment.");
+            return;
+        }
+        String appointmentNumber = segments[1];
+        String action = segments[2];
+
+        if ("status".equals(action)) {
+            handleStatusUpdate(req, resp, appointmentNumber);
+        } else if ("reschedule".equals(action)) {
+            handleReschedule(req, resp, appointmentNumber);
+        } else {
+            writeError(resp, HttpServletResponse.SC_NOT_FOUND, "We couldn't find that appointment.");
+        }
+    }
+
+    private void handleStatusUpdate(HttpServletRequest req, HttpServletResponse resp, String appointmentNumber)
+            throws IOException {
+        try {
+            AppointmentStatus target = parseRequiredStatus(req.getParameter("status"));
+
+            if (target == AppointmentStatus.CANCELLED) {
+                AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST);
+            } else if (target == AppointmentStatus.COMPLETED) {
+                AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.DENTIST);
+            } else {
+                throw new BusinessException("This appointment status cannot be changed.");
+            }
+
+            String reason = target == AppointmentStatus.CANCELLED ? req.getParameter("reason") : null;
+
+            Appointment appointment = appointmentService.updateStatus(appointmentNumber, target, reason,
+                    AuthorizationUtil.currentRole(req), AuthorizationUtil.currentScopeDentistId(req));
+
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("status", "success");
+            body.put("message", target == AppointmentStatus.CANCELLED
+                    ? "Appointment " + appointment.getAppointmentNumber() + " has been cancelled successfully."
+                    : "Appointment " + appointment.getAppointmentNumber() + " has been marked as completed.");
+            body.put("appointment", toJson(appointment));
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(JsonUtil.write(body));
+        } catch (ForbiddenException e) {
+            writeError(resp, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+        } catch (BusinessException e) {
+            int code = com.sunrisedental.service.AppointmentService.APPOINTMENT_NOT_FOUND.equals(e.getMessage())
+                    ? HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_BAD_REQUEST;
+            writeError(resp, code, e.getMessage());
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Unexpected error updating appointment status", e);
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "We couldn't update the appointment right now. Please try again.");
+        }
+    }
+
+    private void handleReschedule(HttpServletRequest req, HttpServletResponse resp, String appointmentNumber)
+            throws IOException {
+        try {
+            AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST);
+
+            int dentistId = parseInt(req.getParameter("dentistId"), "Dentist is required.");
+            LocalDate date = parseDate(req.getParameter("appointmentDate"));
+            LocalTime time = parseTime(req.getParameter("appointmentTime"));
+
+            Appointment appointment = appointmentService.reschedule(appointmentNumber, dentistId, date, time);
+
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("status", "success");
+            body.put("message", "Appointment " + appointment.getAppointmentNumber() + " has been rescheduled successfully.");
+            body.put("appointment", toJson(appointment));
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getWriter().write(JsonUtil.write(body));
+        } catch (ForbiddenException e) {
+            writeError(resp, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+        } catch (BusinessException e) {
+            int code = com.sunrisedental.service.AppointmentService.APPOINTMENT_NOT_FOUND.equals(e.getMessage())
+                    ? HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_BAD_REQUEST;
+            writeError(resp, code, e.getMessage());
+        } catch (NumberFormatException | DateTimeParseException e) {
+            writeError(resp, HttpServletResponse.SC_BAD_REQUEST, "Invalid request data.");
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Unexpected error rescheduling appointment", e);
+            writeError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "We couldn't update the appointment right now. Please try again.");
+        }
+    }
+
+    private AppointmentStatus parseRequiredStatus(String value) {
+        if (value == null || value.isBlank()) {
+            throw new BusinessException("Status is required.");
+        }
+        try {
+            return AppointmentStatus.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("Invalid appointment status.");
+        }
+    }
+
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         resp.setContentType("application/json");
@@ -167,11 +270,14 @@ public class AppointmentServlet extends HttpServlet {
         json.put("patientName", appointment.getPatient().getPatientName());
         json.put("address", appointment.getPatient().getAddress());
         json.put("contactNumber", appointment.getPatient().getContactNumber());
+        json.put("dentistId", appointment.getDentist().getDentistId());
         json.put("dentistName", appointment.getDentist().getDentistName());
+        json.put("treatmentId", appointment.getTreatment().getTreatmentId());
         json.put("treatmentType", appointment.getTreatment().getTreatmentName());
         json.put("appointmentDate", appointment.getAppointmentDate().toString());
         json.put("appointmentTime", appointment.getAppointmentTime().toString());
         json.put("status", appointment.getStatus().name());
+        json.put("cancellationReason", appointment.getCancellationReason());
         return json;
     }
 

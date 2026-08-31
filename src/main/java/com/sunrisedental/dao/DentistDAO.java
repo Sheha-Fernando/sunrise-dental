@@ -14,7 +14,7 @@ import java.util.Optional;
 public class DentistDAO {
 
     public List<Dentist> findActive() throws SQLException {
-        String sql = "SELECT dentist_id, dentist_name, contact_number, is_active "
+        String sql = "SELECT dentist_id, dentist_name, specialty, contact_number, email, is_active "
                 + "FROM dentists WHERE is_active = TRUE ORDER BY dentist_name";
         List<Dentist> dentists = new ArrayList<>();
         try (Connection conn = DatabaseConfig.getConnection();
@@ -34,7 +34,7 @@ public class DentistDAO {
     }
 
     public Optional<Dentist> findById(Connection conn, int dentistId) throws SQLException {
-        String sql = "SELECT dentist_id, dentist_name, contact_number, is_active "
+        String sql = "SELECT dentist_id, dentist_name, specialty, contact_number, email, is_active "
                 + "FROM dentists WHERE dentist_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, dentistId);
@@ -48,7 +48,9 @@ public class DentistDAO {
         Dentist dentist = new Dentist();
         dentist.setDentistId(rs.getInt("dentist_id"));
         dentist.setDentistName(rs.getString("dentist_name"));
+        dentist.setSpecialty(rs.getString("specialty"));
         dentist.setContactNumber(rs.getString("contact_number"));
+        dentist.setEmail(rs.getString("email"));
         dentist.setActive(rs.getBoolean("is_active"));
         return dentist;
     }

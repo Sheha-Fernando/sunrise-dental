@@ -7,6 +7,8 @@
     });
 
     function init() {
+        AppointmentActions.init(session);
+
         const content = document.getElementById("pageContent");
         content.appendChild(document.getElementById("pageTemplate").content.cloneNode(true));
 
@@ -17,6 +19,12 @@
         const searchButton = document.getElementById("searchButton");
         const resultCard = document.getElementById("resultCard");
         const canBill = session.role === "ADMIN" || session.role === "RECEPTIONIST" || session.role === "BILLING";
+        const canManage = session.role === "ADMIN" || session.role === "RECEPTIONIST";
+        const canComplete = session.role === "ADMIN" || session.role === "DENTIST";
+
+        document.getElementById("resultActions").addEventListener("click", (e) => {
+            AppointmentActions.delegate(e, () => search(numberInput.value.trim()));
+        });
 
         function showAlert(message) {
             resultCard.style.display = "none";
@@ -30,6 +38,7 @@
         }
 
         function renderResult(appointment) {
+            AppointmentActions.register(appointment);
             resultCard.style.display = "block";
             document.getElementById("resultNumber").textContent = appointment.appointmentNumber;
             document.getElementById("resultStatus").innerHTML =
@@ -42,15 +51,28 @@
             document.getElementById("resultDate").textContent = Fmt.date(appointment.appointmentDate);
             document.getElementById("resultTime").textContent = Fmt.time(appointment.appointmentTime);
 
-            const billBtn = document.getElementById("generateBillBtn");
-            if (canBill) {
-                billBtn.style.display = "inline-flex";
-                billBtn.onclick = () => {
-                    window.location.href = "billing.html?number=" + encodeURIComponent(appointment.appointmentNumber);
-                };
+            const reasonGroup = document.getElementById("resultReasonGroup");
+            if (appointment.status === "CANCELLED" && appointment.cancellationReason) {
+                document.getElementById("resultReason").textContent = appointment.cancellationReason;
+                reasonGroup.style.display = "block";
             } else {
-                billBtn.style.display = "none";
+                reasonGroup.style.display = "none";
             }
+
+            const actions = [];
+            const number = appointment.appointmentNumber;
+            if (appointment.status === "SCHEDULED") {
+                if (canManage) {
+                    actions.push(`<button type="button" class="btn btn-secondary" data-ap-action="reschedule" data-ap-number="${number}">Reschedule</button>`);
+                    actions.push(`<button type="button" class="btn btn-danger" data-ap-action="cancel" data-ap-number="${number}">Cancel</button>`);
+                }
+                if (canComplete) {
+                    actions.push(`<button type="button" class="btn btn-primary" data-ap-action="complete" data-ap-number="${number}">Mark Completed</button>`);
+                }
+            } else if (appointment.status === "COMPLETED" && canBill) {
+                actions.push(`<button type="button" class="btn btn-primary" data-ap-action="bill" data-ap-number="${number}">Generate Bill</button>`);
+            }
+            document.getElementById("resultActions").innerHTML = actions.join("");
         }
 
         async function search(appointmentNumber) {

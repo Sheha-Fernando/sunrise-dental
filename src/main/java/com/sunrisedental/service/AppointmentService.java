@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,6 +25,9 @@ import java.util.logging.Logger;
 public class AppointmentService {
 
     private static final Logger LOGGER = Logger.getLogger(AppointmentService.class.getName());
+
+    public static final String APPOINTMENT_NOT_FOUND = "We couldn't find that appointment.";
+    private static final int MAX_CANCELLATION_REASON_LENGTH = 255;
 
     private final PatientDAO patientDAO;
     private final DentistDAO dentistDAO;
@@ -204,6 +208,125 @@ public class AppointmentService {
             LOGGER.log(Level.SEVERE, "Database connection error while registering appointment", e);
             throw new BusinessException("Unable to connect to the database.");
         }
+    }
+
+    /**
+     * Cancels or completes a SCHEDULED appointment. Role gating (who may call
+     * this at all) happens in the servlet; this method enforces the status
+     * transition rules and, for COMPLETED, dentist/assistant ownership.
+     */
+    public Appointment updateStatus(String appointmentNumber, com.sunrisedental.model.AppointmentStatus newStatus,
+                                     String cancellationReason, UserRole role, Integer scopeDentistId) {
+        if (newStatus != com.sunrisedental.model.AppointmentStatus.COMPLETED
+                && newStatus != com.sunrisedental.model.AppointmentStatus.CANCELLED) {
+            throw new BusinessException("This appointment status cannot be changed.");
+        }
+        String reason = normalizeCancellationReason(cancellationReason);
+
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                Appointment appointment = appointmentDAO.findByAppointmentNumber(conn, appointmentNumber)
+                        .orElseThrow(() -> new BusinessException(APPOINTMENT_NOT_FOUND));
+
+                if (newStatus == com.sunrisedental.model.AppointmentStatus.COMPLETED) {
+                    verifyDentistOwnership(appointment, role, scopeDentistId);
+                }
+
+                switch (appointment.getStatus()) {
+                    case COMPLETED:
+                        throw new BusinessException("This appointment has already been completed and cannot be cancelled.");
+                    case CANCELLED:
+                        throw new BusinessException("This appointment has already been cancelled.");
+                    default:
+                        break;
+                }
+
+                appointmentDAO.updateStatus(conn, appointment.getAppointmentId(), newStatus,
+                        newStatus == com.sunrisedental.model.AppointmentStatus.CANCELLED ? reason : null);
+                conn.commit();
+
+                appointment.setStatus(newStatus);
+                appointment.setCancellationReason(newStatus == com.sunrisedental.model.AppointmentStatus.CANCELLED ? reason : null);
+                return appointment;
+            } catch (BusinessException | ForbiddenException e) {
+                conn.rollback();
+                throw e;
+            } catch (SQLException e) {
+                conn.rollback();
+                LOGGER.log(Level.SEVERE, "Failed to update appointment status", e);
+                throw new BusinessException("We couldn't update the appointment right now. Please try again.");
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Database connection error while updating appointment status", e);
+            throw new BusinessException("Unable to connect to the database.");
+        }
+    }
+
+    /**
+     * Reschedules a SCHEDULED appointment to a new dentist/date/time.
+     * Role gating happens in the servlet (ADMIN/RECEPTIONIST only); the
+     * dentist's availability check and the database's active_slot_key
+     * constraint remain the authoritative double-booking protection.
+     */
+    public Appointment reschedule(String appointmentNumber, int newDentistId, LocalDate newDate, LocalTime newTime) {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                Appointment appointment = appointmentDAO.findByAppointmentNumber(conn, appointmentNumber)
+                        .orElseThrow(() -> new BusinessException(APPOINTMENT_NOT_FOUND));
+
+                switch (appointment.getStatus()) {
+                    case COMPLETED:
+                        throw new BusinessException("This appointment has already been completed and cannot be rescheduled.");
+                    case CANCELLED:
+                        throw new BusinessException("This appointment has already been cancelled and cannot be rescheduled.");
+                    default:
+                        break;
+                }
+
+                Dentist dentist = dentistDAO.findById(conn, newDentistId)
+                        .filter(Dentist::isActive)
+                        .orElseThrow(() -> new BusinessException("Dentist is unavailable."));
+
+                if (appointmentDAO.isDentistBookedExcluding(conn, newDentistId, newDate, newTime, appointment.getAppointmentId())) {
+                    throw new BusinessException("This time is already booked for the selected dentist.");
+                }
+
+                try {
+                    appointmentDAO.reschedule(conn, appointment.getAppointmentId(), newDentistId, newDate, newTime);
+                } catch (SQLIntegrityConstraintViolationException e) {
+                    throw translateDuplicateKey(e);
+                }
+                conn.commit();
+
+                appointment.setDentist(dentist);
+                appointment.setAppointmentDate(newDate);
+                appointment.setAppointmentTime(newTime);
+                return appointment;
+            } catch (BusinessException e) {
+                conn.rollback();
+                throw e;
+            } catch (SQLException e) {
+                conn.rollback();
+                LOGGER.log(Level.SEVERE, "Failed to reschedule appointment", e);
+                throw new BusinessException("We couldn't update the appointment right now. Please try again.");
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Database connection error while rescheduling appointment", e);
+            throw new BusinessException("Unable to connect to the database.");
+        }
+    }
+
+    private String normalizeCancellationReason(String cancellationReason) {
+        if (cancellationReason == null || cancellationReason.isBlank()) {
+            return null;
+        }
+        String trimmed = cancellationReason.trim();
+        if (trimmed.length() > MAX_CANCELLATION_REASON_LENGTH) {
+            throw new BusinessException("Cancellation reason is too long.");
+        }
+        return trimmed;
     }
 
     private BusinessException translateDuplicateKey(SQLIntegrityConstraintViolationException e) {

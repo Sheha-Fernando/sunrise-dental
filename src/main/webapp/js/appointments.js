@@ -1,14 +1,19 @@
 (function () {
     let allAppointments = [];
 
+    let session = null;
+
     document.addEventListener("shell:ready", (e) => onReady(e.detail));
 
-    function onReady(session) {
+    function onReady(currentSession) {
+        session = currentSession;
+        AppointmentActions.init(session);
+
         const content = document.getElementById("pageContent");
         content.appendChild(document.getElementById("pageTemplate").content.cloneNode(true));
 
         if (session.role === "DENTIST" || session.role === "CLINICAL_ASSISTANT") {
-            document.getElementById("pageTitle").textContent = "My Schedule";
+            document.getElementById("pageTitle").textContent = "My Schedule Today";
         }
 
         const canCreate = session.role === "ADMIN" || session.role === "RECEPTIONIST";
@@ -22,6 +27,11 @@
             loadDentistFilterOptions();
         }
 
+        // Default view: prioritize today's schedule rather than loading all
+        // historical appointments up front - every role can clear the date
+        // filter to see everything.
+        document.getElementById("filterDate").value = todayIso();
+
         document.getElementById("filterSearch").addEventListener("input", renderFiltered);
         document.getElementById("filterDate").addEventListener("change", loadAppointments);
         document.getElementById("filterDentist").addEventListener("change", renderFiltered);
@@ -33,8 +43,17 @@
             document.getElementById("filterStatus").value = "";
             loadAppointments();
         });
+        // Capture phase: must intercept before the row's own onclick (which
+        // navigates to the detail page) fires during the bubble phase.
+        document.getElementById("listContainer").addEventListener("click", (e) => {
+            AppointmentActions.delegate(e, () => loadAppointments());
+        }, true);
 
         loadAppointments();
+    }
+
+    function todayIso() {
+        return new Date().toISOString().split("T")[0];
     }
 
     async function loadDentistFilterOptions() {
@@ -97,20 +116,25 @@
             return;
         }
 
-        const rows = appointments.map(a => `
-            <tr class="clickable" onclick="window.location.href='search.html?number=${encodeURIComponent(a.appointmentNumber)}'">
+        AppointmentActions.registerAll(appointments);
+        const rows = appointments.map(a => {
+            const viewHref = "search.html?number=" + encodeURIComponent(a.appointmentNumber);
+            return `
+            <tr class="clickable" onclick="window.location.href='${viewHref}'">
                 <td class="table-primary-text">${escapeHtml(a.appointmentNumber)}</td>
                 <td>${Fmt.date(a.appointmentDate)}<div class="table-muted-text">${Fmt.time(a.appointmentTime)}</div></td>
                 <td>${escapeHtml(a.patientName)}</td>
                 <td>${escapeHtml(a.dentistName)}</td>
                 <td>${escapeHtml(a.treatmentType)}</td>
                 <td><span class="${Fmt.statusBadgeClass(a.status)}">${Fmt.statusLabel(a.status)}</span></td>
-            </tr>`).join("");
+                <td>${AppointmentActions.actionsHtml(a, viewHref)}</td>
+            </tr>`;
+        }).join("");
 
         container.innerHTML = `<div class="table-wrap"><table class="data-table">
             <thead><tr>
                 <th>Appointment #</th><th>Date &amp; Time</th><th>Patient</th>
-                <th>Dentist</th><th>Treatment</th><th>Status</th>
+                <th>Dentist</th><th>Treatment</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody>${rows}</tbody>
         </table></div>`;

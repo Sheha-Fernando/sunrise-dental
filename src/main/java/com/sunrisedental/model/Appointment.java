@@ -14,6 +14,7 @@ public class Appointment {
     private LocalDate appointmentDate;
     private LocalTime appointmentTime;
     private AppointmentStatus status;
+    private String cancellationReason;
     private Integer createdBy;
     private LocalDateTime createdAt;
 
@@ -79,6 +80,14 @@ public class Appointment {
 
     public void setStatus(AppointmentStatus status) {
         this.status = status;
+    }
+
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+
+    public void setCancellationReason(String cancellationReason) {
+        this.cancellationReason = cancellationReason;
     }
 
     public Integer getCreatedBy() {

@@ -176,6 +176,7 @@ public class PatientServlet extends HttpServlet {
                 summary.getNextAppointmentTime() != null ? summary.getNextAppointmentTime().toString() : null);
         json.put("registeredDate",
                 summary.getRegisteredDate() != null ? summary.getRegisteredDate().toString() : null);
+        json.put("status", summary.getStatus());
         return json;
     }
 

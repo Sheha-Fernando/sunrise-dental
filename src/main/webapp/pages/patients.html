@@ -19,12 +19,30 @@
         <div class="page-header-actions" id="headerActions"></div>
     </div>
 
-    <div class="card-row" id="patientStats" style="margin-bottom:1.25rem;"></div>
+    <div class="card" id="patientStats" style="margin-bottom:1.25rem;">
+        <div id="patientStatsRow" class="status-summary-row"></div>
+    </div>
 
     <div class="toolbar">
         <div class="toolbar-search">
             <input type="search" id="filterSearch" placeholder="Search by name, contact number or patient ID...">
         </div>
+        <select id="filterDentist" style="display:none;">
+            <option value="">All dentists</option>
+        </select>
+        <select id="filterStatus">
+            <option value="">All statuses</option>
+            <option value="UPCOMING">Upcoming</option>
+            <option value="NEW">New</option>
+            <option value="ACTIVE">Active</option>
+        </select>
+        <select id="filterLastVisit">
+            <option value="">Last Visit: All</option>
+            <option value="WEEK">This Week</option>
+            <option value="MONTH">This Month</option>
+            <option value="YEAR">This Year</option>
+        </select>
+        <button type="button" class="btn btn-secondary btn-sm" id="clearFiltersBtn">Clear Filters</button>
     </div>
 
     <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading patients...</div></div>
@@ -126,6 +144,7 @@
 <script src="../js/format.js"></script>
 <script src="../js/shell.js"></script>
 <script src="../js/toast.js"></script>
+<script src="../js/metrics.js"></script>
 <script src="../js/patients.js"></script>
 </body>
 </html>

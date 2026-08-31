@@ -26,7 +26,7 @@ public class AppointmentDAO {
 
     private static final String JOIN_SELECT =
             "SELECT a.appointment_id, a.appointment_number, a.appointment_date, a.appointment_time, "
-          + "       a.status, a.created_by, a.created_at, "
+          + "       a.status, a.cancellation_reason, a.created_by, a.created_at, "
           + "       p.patient_id, p.patient_name, p.address, p.contact_number, p.created_at AS patient_created_at, "
           + "       d.dentist_id, d.dentist_name, d.contact_number AS dentist_contact, d.is_active AS dentist_active, "
           + "       t.treatment_id, t.treatment_name, t.cost, t.is_active AS treatment_active "
@@ -173,6 +173,51 @@ public class AppointmentDAO {
         }
     }
 
+    public boolean isDentistBookedExcluding(Connection conn, int dentistId, LocalDate date, LocalTime time,
+                                             int excludeAppointmentId) throws SQLException {
+        String sql = "SELECT 1 FROM appointments "
+                + "WHERE dentist_id = ? AND appointment_date = ? AND appointment_time = ? AND status <> 'CANCELLED' "
+                + "AND appointment_id <> ? LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, dentistId);
+            ps.setDate(2, Date.valueOf(date));
+            ps.setTime(3, Time.valueOf(time));
+            ps.setInt(4, excludeAppointmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /** Cancel or complete a SCHEDULED appointment. cancellationReason is only ever set for CANCELLED. */
+    public void updateStatus(Connection conn, int appointmentId, AppointmentStatus status, String cancellationReason)
+            throws SQLException {
+        String sql = "UPDATE appointments SET status = ?, cancellation_reason = ? WHERE appointment_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            if (cancellationReason != null) {
+                ps.setString(2, cancellationReason);
+            } else {
+                ps.setNull(2, Types.VARCHAR);
+            }
+            ps.setInt(3, appointmentId);
+            ps.executeUpdate();
+        }
+    }
+
+    /** Moves a SCHEDULED appointment to a new dentist/date/time; the generated active_slot_key recomputes automatically. */
+    public void reschedule(Connection conn, int appointmentId, int dentistId, LocalDate date, LocalTime time)
+            throws SQLException {
+        String sql = "UPDATE appointments SET dentist_id = ?, appointment_date = ?, appointment_time = ? WHERE appointment_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, dentistId);
+            ps.setDate(2, Date.valueOf(date));
+            ps.setTime(3, Time.valueOf(time));
+            ps.setInt(4, appointmentId);
+            ps.executeUpdate();
+        }
+    }
+
     public Optional<Appointment> findByAppointmentNumber(String appointmentNumber) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
             return findByAppointmentNumber(conn, appointmentNumber);
@@ -181,7 +226,7 @@ public class AppointmentDAO {
 
     public Optional<Appointment> findByAppointmentNumber(Connection conn, String appointmentNumber) throws SQLException {
         String sql = "SELECT a.appointment_id, a.appointment_number, a.appointment_date, a.appointment_time, "
-                + "       a.status, a.created_by, a.created_at, "
+                + "       a.status, a.cancellation_reason, a.created_by, a.created_at, "
                 + "       p.patient_id, p.patient_name, p.address, p.contact_number, p.created_at AS patient_created_at, "
                 + "       d.dentist_id, d.dentist_name, d.contact_number AS dentist_contact, d.is_active AS dentist_active, "
                 + "       t.treatment_id, t.treatment_name, t.cost, t.is_active AS treatment_active "
@@ -230,6 +275,7 @@ public class AppointmentDAO {
         Time time = rs.getTime("appointment_time");
         appointment.setAppointmentTime(time != null ? time.toLocalTime() : null);
         appointment.setStatus(AppointmentStatus.valueOf(rs.getString("status")));
+        appointment.setCancellationReason(rs.getString("cancellation_reason"));
         int createdBy = rs.getInt("created_by");
         appointment.setCreatedBy(rs.wasNull() ? null : createdBy);
         Timestamp createdAt = rs.getTimestamp("created_at");

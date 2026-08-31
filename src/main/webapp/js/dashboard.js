@@ -57,14 +57,6 @@
         return dates;
     }
 
-    function statCard(label, value, meta, accent) {
-        return `<div class="stat-card">
-            <div class="stat-label">${label}</div>
-            <div class="stat-value${accent ? " accent" : ""}">${value}</div>
-            ${meta ? `<div class="stat-meta">${meta}</div>` : ""}
-        </div>`;
-    }
-
     function renderScheduleTable(appointments, emptyDesc) {
         const container = document.getElementById("scheduleContainer");
         if (appointments.length === 0) {
@@ -281,31 +273,21 @@
     }
 
     function renderStatusSummary(scheduled, completed, cancelled) {
-        document.getElementById("statusSummaryCard").style.display = "block";
-        document.getElementById("statusSummaryContainer").innerHTML = [
-            ["SCHEDULED", scheduled], ["COMPLETED", completed], ["CANCELLED", cancelled]
-        ].map(([status, count]) => `<div class="status-summary-item">
-                <span class="status-summary-dot" style="background:${STATUS_COLORS[status]}"></span>
-                <div>
-                    <div class="status-summary-count">${count}</div>
-                    <div class="status-summary-label">${STATUS_LABELS[status]} Today</div>
-                </div>
-            </div>`).join("");
+        document.getElementById("summaryGridRow").style.display = "grid";
+        Metrics.render(document.getElementById("statusSummaryContainer"), [
+            { label: "Scheduled Today", value: scheduled, color: STATUS_COLORS.SCHEDULED },
+            { label: "Completed Today", value: completed, color: STATUS_COLORS.COMPLETED },
+            { label: "Cancelled Today", value: cancelled, color: STATUS_COLORS.CANCELLED },
+        ]);
     }
 
     function renderClinicOverview(totalPatients, activeDentists, revenue) {
-        document.getElementById("clinicOverviewCard").style.display = "block";
-        document.getElementById("clinicOverviewContainer").innerHTML = [
-            ["#2A78D6", totalPatients, "Total Patients"],
-            ["#1BAF7A", activeDentists, "Active Dentists"],
-            ["#B89552", Fmt.currency(revenue), "Today's Revenue"],
-        ].map(([color, value, label]) => `<div class="status-summary-item">
-                <span class="status-summary-dot" style="background:${color}"></span>
-                <div>
-                    <div class="status-summary-count">${value}</div>
-                    <div class="status-summary-label">${label}</div>
-                </div>
-            </div>`).join("");
+        document.getElementById("summaryGridRow").style.display = "grid";
+        Metrics.render(document.getElementById("clinicOverviewContainer"), [
+            { label: "Total Patients", value: totalPatients, color: "#2A78D6" },
+            { label: "Active Dentists", value: activeDentists, color: "#1BAF7A" },
+            { label: "Today's Revenue", value: Fmt.currency(revenue), color: "#B89552" },
+        ]);
     }
 
     function renderActivityFeed(todayAppointments, todayBills) {
@@ -373,7 +355,7 @@
             const todaysBills = bills.filter(b => b.billDate.startsWith(todayIso()));
             const revenue = todaysBills.reduce((sum, b) => sum + Number(b.totalAmount), 0);
 
-            document.getElementById("statCards").style.display = "none";
+            document.getElementById("statCardsCard").style.display = "none";
 
             renderClinicOverview(patients.length, dentists.length, revenue);
 
@@ -445,11 +427,12 @@
             const bookedSlots = [...bookedTodayByDentist.values()].reduce((sum, n) => sum + n, 0);
             const availableSlots = Math.max(totalSlots - bookedSlots, 0);
 
-            document.getElementById("statCards").innerHTML =
-                statCard("Today's Appointments", today.length) +
-                statCard("Upcoming", upcoming.length) +
-                statCard("Today's Patients", distinctPatientsToday) +
-                statCard("Available Slots Today", availableSlots);
+            Metrics.render(document.getElementById("statCards"), [
+                { label: "Today's Appointments", value: today.length },
+                { label: "Upcoming", value: upcoming.length },
+                { label: "Today's Patients", value: distinctPatientsToday },
+                { label: "Available Slots Today", value: availableSlots },
+            ]);
 
             renderWeeklyAppointmentsChart("weeklyChart", all);
 
@@ -501,11 +484,12 @@
                 : (upcoming[0] ? `${upcoming[0].patientName} &middot; ${Fmt.date(upcoming[0].appointmentDate)}` : "None scheduled");
             const completed = today.filter(a => a.status === "COMPLETED").length;
 
-            document.getElementById("statCards").innerHTML =
-                statCard("Today's Appointments", today.length) +
-                statCard("Next Patient", nextPatientLabel, null, true) +
-                statCard("Patients Seen Today", completed) +
-                statCard("Upcoming Appointments", upcoming.length);
+            Metrics.render(document.getElementById("statCards"), [
+                { label: "Today's Appointments", value: today.length },
+                { label: "Next Patient", value: nextPatientLabel, color: "#B89552" },
+                { label: "Patients Seen Today", value: completed },
+                { label: "Upcoming Appointments", value: upcoming.length },
+            ]);
 
             const thisMonth = all.filter(a => a.appointmentDate.startsWith(monthPrefix()));
             renderTreatmentsDoughnut("myTreatmentChart", thisMonth, "No treatment data available for this month.");
@@ -541,11 +525,12 @@
                 ? `${nextToday.patientName} &middot; ${Fmt.time(nextToday.appointmentTime)}`
                 : (upcoming[0] ? `${upcoming[0].patientName} &middot; ${Fmt.date(upcoming[0].appointmentDate)}` : "None scheduled");
 
-            document.getElementById("statCards").innerHTML =
-                statCard("Assigned Dentist", escapeHtml(assignedDentistName), null, true) +
-                statCard("Today's Appointments", today.length) +
-                statCard("Next Patient", nextPatientLabel) +
-                statCard("Upcoming Patients", upcoming.length);
+            Metrics.render(document.getElementById("statCards"), [
+                { label: "Assigned Dentist", value: escapeHtml(assignedDentistName), color: "#B89552" },
+                { label: "Today's Appointments", value: today.length },
+                { label: "Next Patient", value: nextPatientLabel },
+                { label: "Upcoming Patients", value: upcoming.length },
+            ]);
 
             renderScheduleTable(today, "There are no appointments scheduled for today.");
         } catch (err) {
@@ -582,11 +567,12 @@
             const billedNumbers = new Set(bills.map(b => b.appointmentNumber));
             const pending = appointments.filter(a => !billedNumbers.has(a.appointmentNumber));
 
-            document.getElementById("statCards").innerHTML =
-                statCard("Today's Revenue", Fmt.currency(revenue), null, true) +
-                statCard("This Month's Revenue", Fmt.currency(monthRevenue)) +
-                statCard("Bills Generated Today", todaysBills.length) +
-                statCard("Pending Billing (Today)", pending.length);
+            Metrics.render(document.getElementById("statCards"), [
+                { label: "Today's Revenue", value: Fmt.currency(revenue), color: "#B89552" },
+                { label: "This Month's Revenue", value: Fmt.currency(monthRevenue) },
+                { label: "Bills Generated Today", value: todaysBills.length },
+                { label: "Pending Billing (Today)", value: pending.length },
+            ]);
 
             renderRevenueTrendChart("revenueChart", bills);
 

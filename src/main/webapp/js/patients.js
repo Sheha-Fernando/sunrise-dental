@@ -47,16 +47,26 @@
         const searchInput = document.getElementById("filterSearch");
         if (isScopedRole(session.role)) {
             document.getElementById("patientStats").remove();
+            document.getElementById("filterDentist").remove();
+            document.getElementById("filterStatus").remove();
+            document.getElementById("filterLastVisit").remove();
+            document.getElementById("clearFiltersBtn").remove();
             searchInput.placeholder = "Filter by patient name...";
             loadDentistPatients();
             searchInput.addEventListener("input", () => renderDentistPatients(searchInput.value));
         } else {
-            let debounce = null;
-            loadPatients("");
-            loadPatientStats();
-            searchInput.addEventListener("input", () => {
-                clearTimeout(debounce);
-                debounce = setTimeout(() => loadPatients(searchInput.value.trim()), 300);
+            loadDentistFilterOptions();
+            loadPatients();
+            searchInput.addEventListener("input", renderFiltered);
+            document.getElementById("filterDentist").addEventListener("change", renderFiltered);
+            document.getElementById("filterStatus").addEventListener("change", renderFiltered);
+            document.getElementById("filterLastVisit").addEventListener("change", renderFiltered);
+            document.getElementById("clearFiltersBtn").addEventListener("click", () => {
+                searchInput.value = "";
+                document.getElementById("filterDentist").value = "";
+                document.getElementById("filterStatus").value = "";
+                document.getElementById("filterLastVisit").value = "";
+                renderFiltered();
             });
         }
 
@@ -65,13 +75,15 @@
         }
     }
 
-    async function loadPatients(query) {
+    let allPatients = [];
+
+    async function loadPatients() {
         const container = document.getElementById("listContainer");
         container.innerHTML = `<div class="loading-inline"><span class="spinner"></span> Loading patients...</div>`;
         try {
-            const path = query ? "/patients?q=" + encodeURIComponent(query) : "/patients";
-            const patients = await Api.get(path);
-            renderPatientTable(patients, true);
+            allPatients = await Api.get("/patients");
+            renderFiltered();
+            loadPatientStats();
         } catch (err) {
             container.innerHTML = `<div class="empty-state">
                 <div class="empty-title">We couldn't load patients</div>
@@ -80,12 +92,76 @@
         }
     }
 
+    async function loadDentistFilterOptions() {
+        const select = document.getElementById("filterDentist");
+        try {
+            const dentists = await Api.get("/dentists");
+            select.innerHTML = '<option value="">All dentists</option>' +
+                dentists.map(d => `<option value="${escapeHtml(d.dentistName)}">${escapeHtml(d.dentistName)}</option>`).join("");
+            select.style.display = "";
+        } catch (err) {
+            // Non-fatal - the filter simply stays hidden if the dentist list can't load.
+        }
+    }
+
+    function matchesLastVisit(lastVisitDate, range) {
+        if (!range) return true;
+        if (!lastVisitDate) return false;
+        const visit = new Date(lastVisitDate + "T00:00:00");
+        const now = new Date();
+        if (range === "WEEK") {
+            const weekAgo = new Date(now);
+            weekAgo.setDate(now.getDate() - 7);
+            return visit >= weekAgo && visit <= now;
+        }
+        if (range === "MONTH") {
+            return visit.getFullYear() === now.getFullYear() && visit.getMonth() === now.getMonth();
+        }
+        if (range === "YEAR") {
+            return visit.getFullYear() === now.getFullYear();
+        }
+        return true;
+    }
+
+    function renderFiltered() {
+        const search = document.getElementById("filterSearch").value.trim().toLowerCase();
+        const dentist = document.getElementById("filterDentist").value;
+        const status = document.getElementById("filterStatus").value;
+        const lastVisit = document.getElementById("filterLastVisit").value;
+
+        let filtered = allPatients;
+        if (search) {
+            filtered = filtered.filter(p => p.patientName.toLowerCase().includes(search)
+                || p.contactNumber.toLowerCase().includes(search)
+                || String(p.patientId).includes(search));
+        }
+        if (dentist) {
+            filtered = filtered.filter(p => p.assignedDentistName === dentist);
+        }
+        if (status) {
+            filtered = filtered.filter(p => p.status === status);
+        }
+        if (lastVisit) {
+            filtered = filtered.filter(p => matchesLastVisit(p.lastVisitDate, lastVisit));
+        }
+
+        renderPatientTable(filtered, true);
+    }
+
+    const STATUS_BADGE_LABELS = { UPCOMING: "Upcoming", NEW: "New", ACTIVE: "Active" };
+
+    function statusBadge(status) {
+        const label = STATUS_BADGE_LABELS[status] || "Active";
+        const cls = status === "UPCOMING" ? "badge-upcoming" : status === "NEW" ? "badge-new" : "badge-active";
+        return `<span class="badge ${cls}">${label}</span>`;
+    }
+
     function renderPatientTable(patients, clickable) {
         const container = document.getElementById("listContainer");
         if (patients.length === 0) {
             container.innerHTML = `<div class="empty-state">
                 <div class="empty-title">No patients found</div>
-                <div class="empty-desc">Try a different search or register a new patient.</div>
+                <div class="empty-desc">Try adjusting your search or filters.</div>
             </div>`;
             return;
         }
@@ -99,7 +175,7 @@
                 <td>${p.assignedDentistName ? escapeHtml(p.assignedDentistName) : "&mdash;"}</td>
                 <td>${p.lastVisitDate ? Fmt.date(p.lastVisitDate) : "&mdash;"}</td>
                 <td>${p.nextAppointmentDate ? Fmt.date(p.nextAppointmentDate) + (p.nextAppointmentTime ? " &middot; " + Fmt.time(p.nextAppointmentTime) : "") : "&mdash;"}</td>
-                <td><span class="badge badge-active">Active</span></td>
+                <td>${statusBadge(p.status)}</td>
             </tr>`).join("");
         container.innerHTML = `<div class="table-wrap"><table class="data-table">
             <thead><tr><th>Patient</th><th>Contact</th><th>Assigned Dentist</th><th>Last Visit</th><th>Next Appointment</th><th>Status</th></tr></thead>
@@ -107,10 +183,10 @@
         </table></div>`;
     }
 
-    async function loadPatientStats() {
-        const statsEl = document.getElementById("patientStats");
+    function loadPatientStats() {
+        const statsEl = document.getElementById("patientStatsRow");
         try {
-            const patients = await Api.get("/patients");
+            const patients = allPatients;
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
@@ -126,15 +202,12 @@
                 return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
             }).length;
 
-            statsEl.innerHTML = [
-                ["Total Patients", patients.length],
-                ["With Upcoming Appointment", withUpcoming],
-                ["Visited This Month", visitedThisMonth],
-                ["New This Month", newThisMonth],
-            ].map(([label, value]) => `<div class="stat-card">
-                <div class="stat-label">${label}</div>
-                <div class="stat-value">${value}</div>
-            </div>`).join("");
+            Metrics.render(statsEl, [
+                { label: "Total Patients", value: patients.length },
+                { label: "With Upcoming Appointment", value: withUpcoming },
+                { label: "Visited This Month", value: visitedThisMonth },
+                { label: "New This Month", value: newThisMonth },
+            ]);
         } catch (err) {
             statsEl.innerHTML = "";
         }
@@ -168,6 +241,7 @@
                         nextAppointmentDate: null,
                         nextAppointmentTime: null,
                         nextAppointmentNumber: null,
+                        hasCompleted: false,
                     });
                 }
                 const entry = byName.get(key);
@@ -184,6 +258,16 @@
                     entry.lastVisitDate = a.appointmentDate;
                     entry.lastVisitNumber = a.appointmentNumber;
                 }
+                if (a.status === "COMPLETED") {
+                    entry.hasCompleted = true;
+                }
+            }
+            // Same Upcoming -> New -> Active priority the backend uses for
+            // the general patient list, computed here from the same real
+            // appointment statuses since a scoped dentist has no access to
+            // the /api/patients endpoint this data would otherwise come from.
+            for (const entry of byName.values()) {
+                entry.status = entry.nextAppointmentDate ? "UPCOMING" : (entry.hasCompleted ? "ACTIVE" : "NEW");
             }
             dentistPatients = [...byName.values()].sort((a, b) => a.patientName.localeCompare(b.patientName));
             renderDentistPatients("");
@@ -216,7 +300,7 @@
                 <td>${escapeHtml(ownDentistName)}</td>
                 <td>${p.lastVisitDate ? Fmt.date(p.lastVisitDate) : "&mdash;"}</td>
                 <td>${p.nextAppointmentDate ? Fmt.date(p.nextAppointmentDate) + " &middot; " + Fmt.time(p.nextAppointmentTime) : "&mdash;"}</td>
-                <td><span class="badge badge-active">Active</span></td>
+                <td>${statusBadge(p.status)}</td>
             </tr>`;
         }).join("");
         container.innerHTML = `<div class="table-wrap"><table class="data-table">
@@ -282,7 +366,7 @@
                 });
                 closeRegisterModal();
                 Toast.success("Patient registered successfully.");
-                loadPatients("");
+                loadPatients();
             } catch (err) {
                 alertEl.textContent = err.message;
                 alertEl.classList.add("visible");

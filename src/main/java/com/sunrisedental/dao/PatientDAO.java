@@ -29,7 +29,9 @@ public class PatientDAO {
     public List<PatientSummary> findAllSummaries(String search) throws SQLException {
         String sql = "SELECT p.patient_id, p.patient_name, p.contact_number, p.created_at, "
                 + "       lv.appointment_date AS last_visit_date, lv.dentist_name AS last_visit_dentist, "
-                + "       na.appointment_date AS next_appointment_date, na.appointment_time AS next_appointment_time "
+                + "       na.appointment_date AS next_appointment_date, na.appointment_time AS next_appointment_time, "
+                + "       EXISTS(SELECT 1 FROM appointments c WHERE c.patient_id = p.patient_id "
+                + "              AND c.status = 'COMPLETED') AS has_completed "
                 + "FROM patients p "
                 + "LEFT JOIN ("
                 + "    SELECT x.patient_id, x.appointment_date, x.dentist_name FROM ("
@@ -90,6 +92,19 @@ public class PatientDAO {
                     summary.setNextAppointmentTime(nextTime != null ? nextTime.toLocalTime() : null);
                     Timestamp createdAt = rs.getTimestamp("created_at");
                     summary.setRegisteredDate(createdAt != null ? createdAt.toLocalDateTime().toLocalDate() : null);
+
+                    // Priority: Upcoming (future SCHEDULED appointment) -> New (no
+                    // completed visit history yet) -> Active (has visit history,
+                    // nothing currently scheduled). Computed here, once, so the
+                    // frontend list and the Status filter can never disagree.
+                    boolean hasCompleted = rs.getBoolean("has_completed");
+                    if (summary.getNextAppointmentDate() != null) {
+                        summary.setStatus("UPCOMING");
+                    } else if (!hasCompleted) {
+                        summary.setStatus("NEW");
+                    } else {
+                        summary.setStatus("ACTIVE");
+                    }
                     summaries.add(summary);
                 }
             }
