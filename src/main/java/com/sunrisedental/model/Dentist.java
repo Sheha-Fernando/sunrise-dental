@@ -7,6 +7,7 @@ public class Dentist {
     private String specialty;
     private String contactNumber;
     private String email;
+    private String workingDays;
     private boolean active;
 
     public int getDentistId() {
@@ -47,6 +48,14 @@ public class Dentist {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getWorkingDays() {
+        return workingDays;
+    }
+
+    public void setWorkingDays(String workingDays) {
+        this.workingDays = workingDays;
     }
 
     public boolean isActive() {

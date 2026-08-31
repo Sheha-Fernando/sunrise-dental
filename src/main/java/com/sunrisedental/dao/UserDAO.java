@@ -18,7 +18,8 @@ import java.util.Optional;
 public class UserDAO {
 
     private static final String SELECT_COLUMNS =
-            "user_id, username, password_hash, full_name, role, dentist_id, assigned_dentist_id, is_active, created_at ";
+            "user_id, username, password_hash, full_name, contact_number, email, "
+          + "role, dentist_id, assigned_dentist_id, is_active, created_at ";
 
     public Optional<User> findByUsername(String username) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
@@ -81,24 +82,38 @@ public class UserDAO {
         }
     }
 
-    public int create(String username, String passwordHash, String fullName,
+    public boolean existsByUsernameExcludingId(Connection conn, String username, int excludeUserId) throws SQLException {
+        String sql = "SELECT 1 FROM users WHERE username = ? AND user_id <> ? LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setInt(2, excludeUserId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public int create(String username, String passwordHash, String fullName, String contactNumber, String email,
                        UserRole role, Integer dentistId, Integer assignedDentistId) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
-            return create(conn, username, passwordHash, fullName, role, dentistId, assignedDentistId);
+            return create(conn, username, passwordHash, fullName, contactNumber, email, role, dentistId, assignedDentistId);
         }
     }
 
     public int create(Connection conn, String username, String passwordHash, String fullName,
+                       String contactNumber, String email,
                        UserRole role, Integer dentistId, Integer assignedDentistId) throws SQLException {
-        String sql = "INSERT INTO users (username, password_hash, full_name, role, dentist_id, assigned_dentist_id) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (username, password_hash, full_name, contact_number, email, "
+                + "role, dentist_id, assigned_dentist_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, username);
             ps.setString(2, passwordHash);
             ps.setString(3, fullName);
-            ps.setString(4, role.name());
-            setNullableInt(ps, 5, dentistId);
-            setNullableInt(ps, 6, assignedDentistId);
+            ps.setString(4, contactNumber);
+            ps.setString(5, email);
+            ps.setString(6, role.name());
+            setNullableInt(ps, 7, dentistId);
+            setNullableInt(ps, 8, assignedDentistId);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -123,6 +138,35 @@ public class UserDAO {
             setNullableInt(ps, 2, dentistId);
             setNullableInt(ps, 3, assignedDentistId);
             ps.setInt(4, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    /** Profile edit: full name/username/contact/email always; password only when a new one was actually provided. */
+    public void updateProfile(Connection conn, int userId, String fullName, String username,
+                               String passwordHash, String contactNumber, String email) throws SQLException {
+        String sql = passwordHash != null
+                ? "UPDATE users SET full_name = ?, username = ?, password_hash = ?, contact_number = ?, email = ? WHERE user_id = ?"
+                : "UPDATE users SET full_name = ?, username = ?, contact_number = ?, email = ? WHERE user_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            int i = 1;
+            ps.setString(i++, fullName);
+            ps.setString(i++, username);
+            if (passwordHash != null) {
+                ps.setString(i++, passwordHash);
+            }
+            ps.setString(i++, contactNumber);
+            ps.setString(i++, email);
+            ps.setInt(i, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateAssignedDentist(Connection conn, int userId, Integer assignedDentistId) throws SQLException {
+        String sql = "UPDATE users SET assigned_dentist_id = ? WHERE user_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            setNullableInt(ps, 1, assignedDentistId);
+            ps.setInt(2, userId);
             ps.executeUpdate();
         }
     }
@@ -173,6 +217,8 @@ public class UserDAO {
         user.setUsername(rs.getString("username"));
         user.setPasswordHash(rs.getString("password_hash"));
         user.setFullName(rs.getString("full_name"));
+        user.setContactNumber(rs.getString("contact_number"));
+        user.setEmail(rs.getString("email"));
         user.setRole(UserRole.valueOf(rs.getString("role")));
         int dentistId = rs.getInt("dentist_id");
         user.setDentistId(rs.wasNull() ? null : dentistId);

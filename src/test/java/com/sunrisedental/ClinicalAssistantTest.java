@@ -52,7 +52,7 @@ class ClinicalAssistantTest {
     @Order(2)
     void testCreateClinicalAssistantSucceeds() {
         User user = staffService.createStaff("CA Test Assistant", "catest.assistant",
-                "Temp@12345", UserRole.CLINICAL_ASSISTANT, null, 1);
+                "Temp@12345", UserRole.CLINICAL_ASSISTANT, null, null, null, null, 1);
         assertEquals(UserRole.CLINICAL_ASSISTANT, user.getRole());
         assertNull(user.getDentistId());
         assertEquals(1, user.getAssignedDentistId());
@@ -62,7 +62,7 @@ class ClinicalAssistantTest {
     @Order(3)
     void testClinicalAssistantWithoutAssignedDentistRejected() {
         BusinessException ex = assertThrows(BusinessException.class, () -> staffService.createStaff(
-                "CA No Link", "catest.nolink", "Temp@12345", UserRole.CLINICAL_ASSISTANT, null, null));
+                "CA No Link", "catest.nolink", "Temp@12345", UserRole.CLINICAL_ASSISTANT, null, null, null, null, null));
         assertEquals("An assigned dentist is required for a Clinical Assistant account.", ex.getMessage());
     }
 
@@ -70,7 +70,7 @@ class ClinicalAssistantTest {
     @Order(4)
     void testNonClinicalAssistantWithAssignedDentistRejected() {
         BusinessException ex = assertThrows(BusinessException.class, () -> staffService.createStaff(
-                "CA Bad Link", "catest.badlink", "Temp@12345", UserRole.RECEPTIONIST, null, 1));
+                "CA Bad Link", "catest.badlink", "Temp@12345", UserRole.RECEPTIONIST, null, null, null, null, 1));
         assertEquals("Assigned dentist is only applicable to Clinical Assistant accounts.", ex.getMessage());
     }
 
@@ -78,7 +78,7 @@ class ClinicalAssistantTest {
     @Order(5)
     void testInvalidAssignedDentistRejected() {
         BusinessException ex = assertThrows(BusinessException.class, () -> staffService.createStaff(
-                "CA Bad Dentist", "catest.baddentist", "Temp@12345", UserRole.CLINICAL_ASSISTANT, null, 99999));
+                "CA Bad Dentist", "catest.baddentist", "Temp@12345", UserRole.CLINICAL_ASSISTANT, null, null, null, null, 99999));
         assertEquals("Selected dentist is not available.", ex.getMessage());
     }
 

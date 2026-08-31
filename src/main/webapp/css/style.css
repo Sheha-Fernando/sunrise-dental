@@ -347,6 +347,35 @@ button {
     flex-shrink: 0;
 }
 
+.tab-bar {
+    display: flex;
+    gap: 24px;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 1.5rem;
+}
+
+.tab-link {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 0 0 0.6rem;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.tab-link:hover {
+    color: var(--color-text);
+}
+
+.tab-link.active {
+    color: var(--color-info);
+    border-bottom-color: var(--color-info);
+}
+
 .section-title {
     font-size: 0.82rem;
     font-weight: 700;
@@ -657,6 +686,44 @@ select[aria-invalid="true"] {
 
 .field-error.visible {
     display: block;
+}
+
+.password-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.password-input-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.password-input-row .link-btn {
+    flex-shrink: 0;
+    font-size: 0.82rem;
+}
+
+.working-days-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+}
+
+.working-days-checkboxes label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.working-days-checkboxes input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
 }
 
 .field-hint {

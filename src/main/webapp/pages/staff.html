@@ -15,15 +15,26 @@
     <div class="page-header">
         <div>
             <h1>Staff</h1>
-            <p class="page-subtitle">Manage clinic staff accounts and roles.</p>
+            <p class="page-subtitle">Manage clinic staff and dentists.</p>
         </div>
         <div class="page-header-actions">
             <button type="button" class="btn btn-primary" id="openAddStaffBtn">+ Add Staff</button>
         </div>
     </div>
 
+    <div class="tab-bar">
+        <button type="button" class="tab-link active" id="doctorStaffTab" data-tab="doctor">Doctor staff</button>
+        <button type="button" class="tab-link" id="generalStaffTab" data-tab="general">General staff</button>
+    </div>
+
     <div id="staffAlert" class="alert alert-error" role="alert"></div>
-    <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading staff...</div></div>
+
+    <div id="doctorTabPanel" class="tab-panel">
+        <div id="dentistListContainer"><div class="loading-inline"><span class="spinner"></span> Loading dentists...</div></div>
+    </div>
+    <div id="generalTabPanel" class="tab-panel" hidden>
+        <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading staff...</div></div>
+    </div>
 </template>
 
 <div class="modal-overlay" id="staffModalOverlay">
@@ -37,17 +48,7 @@
                 <input type="text" id="staffFullName" required>
                 <p class="field-error" id="staffFullNameError">Full name is required.</p>
             </div>
-            <div class="form-group">
-                <label for="staffUsername">Username <span aria-hidden="true">*</span></label>
-                <input type="text" id="staffUsername" required>
-                <p class="field-error" id="staffUsernameError">Username is required.</p>
-            </div>
-            <div class="form-group">
-                <label for="staffPassword">Password <span aria-hidden="true">*</span></label>
-                <input type="password" id="staffPassword" required>
-                <p class="field-error" id="staffPasswordError">Password is required.</p>
-            </div>
-            <div class="form-group">
+            <div class="form-group" id="staffRoleGroup">
                 <label for="staffRole">Role <span aria-hidden="true">*</span></label>
                 <select id="staffRole" required>
                     <option value="RECEPTIONIST">Front Desk Reception</option>
@@ -57,12 +58,55 @@
                     <option value="ADMIN">Administrator</option>
                 </select>
             </div>
-            <div class="form-group" id="staffDentistGroup" style="display:none;">
-                <label for="staffDentistId">Dentist <span aria-hidden="true">*</span></label>
-                <select id="staffDentistId">
-                    <option value="">Loading dentists...</option>
+            <div class="form-group">
+                <label for="staffUsername">Username <span aria-hidden="true">*</span></label>
+                <input type="text" id="staffUsername" required>
+                <p class="field-error" id="staffUsernameError">Username is required.</p>
+            </div>
+            <div class="form-group" id="staffPasswordGroup">
+                <label for="staffPassword">Password <span aria-hidden="true">*</span></label>
+                <div class="password-input-row">
+                    <input type="password" id="staffPassword">
+                    <button type="button" class="link-btn" id="togglePasswordBtn">Show</button>
+                </div>
+                <p class="field-error" id="staffPasswordError">Password is required.</p>
+                <p id="staffPasswordHint" style="display:none; font-size:0.8rem; color:var(--color-text-muted); margin-top:0.3rem;">
+                    Leave blank to keep the current password unchanged.
+                </p>
+            </div>
+            <div class="form-group">
+                <label for="staffContact">Contact Number</label>
+                <input type="tel" id="staffContact" placeholder="e.g. 0771234567">
+                <p class="field-error" id="staffContactError">Please enter a valid contact number.</p>
+            </div>
+            <div class="form-group">
+                <label for="staffEmail">Email Address</label>
+                <input type="email" id="staffEmail" placeholder="e.g. kasun.silva@sunrisedental.lk">
+                <p class="field-error" id="staffEmailError">Please enter a valid email address.</p>
+            </div>
+
+            <div class="form-group" id="staffSpecialtyGroup" style="display:none;">
+                <label for="staffSpecialty">Specialty <span aria-hidden="true">*</span></label>
+                <select id="staffSpecialty">
+                    <option value="General Dentistry">General Dentistry</option>
+                    <option value="Orthodontics">Orthodontics</option>
+                    <option value="Oral Surgery">Oral Surgery</option>
+                    <option value="Periodontics">Periodontics</option>
+                    <option value="Endodontics">Endodontics</option>
                 </select>
-                <p class="field-error" id="staffDentistIdError">Please select a dentist.</p>
+                <p class="field-error" id="staffSpecialtyError">Specialty is required.</p>
+            </div>
+            <div class="form-group" id="staffWorkingDaysGroup" style="display:none;">
+                <label>Working Days</label>
+                <div class="working-days-checkboxes">
+                    <label><input type="checkbox" id="wdMon" checked> Monday</label>
+                    <label><input type="checkbox" id="wdTue" checked> Tuesday</label>
+                    <label><input type="checkbox" id="wdWed" checked> Wednesday</label>
+                    <label><input type="checkbox" id="wdThu" checked> Thursday</label>
+                    <label><input type="checkbox" id="wdFri" checked> Friday</label>
+                    <label><input type="checkbox" id="wdSat"> Saturday</label>
+                    <label><input type="checkbox" id="wdSun"> Sunday</label>
+                </div>
             </div>
             <div class="form-group" id="staffAssignedDentistGroup" style="display:none;">
                 <label for="staffAssignedDentistId">Assigned Dentist <span aria-hidden="true">*</span></label>
@@ -71,6 +115,7 @@
                 </select>
                 <p class="field-error" id="staffAssignedDentistIdError">Please select an assigned dentist.</p>
             </div>
+
             <div class="btn-row">
                 <button type="button" class="btn btn-secondary" id="cancelAddStaffBtn">Cancel</button>
                 <button type="submit" class="btn btn-primary" id="addStaffSubmitBtn">Create Staff Account</button>
