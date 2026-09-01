@@ -26,12 +26,15 @@ const Shell = (() => {
             { label: "Appointments", href: "appointments.html", icon: "▤" },
             { label: "Patients", href: "patients.html", icon: "▥" },
             { label: "Billing", href: "billing.html", icon: "▧" },
+            { label: "Dentist Availability", href: "dentist-availability.html", icon: "◐" },
+            { label: "Reports", href: "reports.html", icon: "▣" },
             { label: "Help", href: "help.html", icon: "?" },
         ],
         DENTIST: [
             { label: "Dashboard", href: "dashboard.html", icon: "◆" },
             { label: "My Schedule", href: "appointments.html", icon: "▤" },
             { label: "My Patients", href: "patients.html", icon: "▥" },
+            { label: "Reports", href: "reports.html", icon: "▣" },
             { label: "Help", href: "help.html", icon: "?" },
         ],
         BILLING: [

@@ -112,6 +112,53 @@ public class PatientDAO {
         return summaries;
     }
 
+    /** Total registered patients, regardless of appointment history - for report summaries. */
+    public int countTotal() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM patients";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            rs.next();
+            return rs.getInt(1);
+        }
+    }
+
+    /** Patients registered within an inclusive date range - "new patients" for a report period. */
+    public int countNewInRange(java.time.LocalDate from, java.time.LocalDate to) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM patients WHERE DATE(created_at) BETWEEN ? AND ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, Date.valueOf(from));
+            ps.setObject(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    /**
+     * Distinct patients who had an appointment within the range and also had
+     * an earlier appointment before the range started - "returning patients"
+     * for a report period, as opposed to a patient seen for the first time.
+     */
+    public int countReturningInRange(java.time.LocalDate from, java.time.LocalDate to) throws SQLException {
+        String sql = "SELECT COUNT(DISTINCT a1.patient_id) FROM appointments a1 "
+                + "WHERE a1.appointment_date BETWEEN ? AND ? "
+                + "AND EXISTS (SELECT 1 FROM appointments a2 "
+                + "            WHERE a2.patient_id = a1.patient_id AND a2.appointment_date < ?)";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, Date.valueOf(from));
+            ps.setObject(2, Date.valueOf(to));
+            ps.setObject(3, Date.valueOf(from));
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
     public int create(Patient patient) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
             return create(conn, patient);

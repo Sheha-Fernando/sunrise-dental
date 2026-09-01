@@ -25,6 +25,14 @@ const Fmt = (() => {
         return `${String(hour).padStart(2, "0")}:${minuteStr} ${suffix}`;
     }
 
+    function weekdayDate(isoDate) {
+        // "2026-09-02" -> "Wednesday, 2 September 2026"
+        if (!isoDate) return "";
+        const [year, month, day] = isoDate.split("-").map(Number);
+        const weekday = new Date(year, month - 1, day).toLocaleDateString("en-US", { weekday: "long" });
+        return `${weekday}, ${day} ${MONTHS[month - 1]} ${year}`;
+    }
+
     function currency(amount) {
         const value = Number(amount);
         return "Rs. " + value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -43,5 +51,5 @@ const Fmt = (() => {
         return s.charAt(0) + s.slice(1).toLowerCase();
     }
 
-    return { date, time, currency, statusBadgeClass, statusLabel };
+    return { date, weekdayDate, time, currency, statusBadgeClass, statusLabel };
 })();

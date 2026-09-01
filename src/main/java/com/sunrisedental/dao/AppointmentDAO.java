@@ -79,6 +79,43 @@ public class AppointmentDAO {
         return appointments;
     }
 
+    /**
+     * Lists appointments within an inclusive date range for report generation.
+     * Same filter/authorization contract as findAll: callers (ReportService)
+     * are responsible for forcing dentistId when the caller is scoped.
+     */
+    public List<Appointment> findByDateRange(LocalDate from, LocalDate to, Integer dentistId) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            return findByDateRange(conn, from, to, dentistId);
+        }
+    }
+
+    public List<Appointment> findByDateRange(Connection conn, LocalDate from, LocalDate to, Integer dentistId)
+            throws SQLException {
+        StringBuilder sql = new StringBuilder(JOIN_SELECT).append("WHERE a.appointment_date BETWEEN ? AND ? ");
+        List<Object> params = new ArrayList<>();
+        params.add(Date.valueOf(from));
+        params.add(Date.valueOf(to));
+        if (dentistId != null) {
+            sql.append("AND a.dentist_id = ? ");
+            params.add(dentistId);
+        }
+        sql.append("ORDER BY a.appointment_date, a.appointment_time");
+
+        List<Appointment> appointments = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    appointments.add(mapRow(rs));
+                }
+            }
+        }
+        return appointments;
+    }
+
     public List<Appointment> findByPatientId(int patientId) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
             String sql = JOIN_SELECT + "WHERE a.patient_id = ? ORDER BY a.appointment_date DESC, a.appointment_time DESC";

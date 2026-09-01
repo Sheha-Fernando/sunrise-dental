@@ -1633,3 +1633,87 @@ table.data-table tbody tr.clickable:hover {
         display: none;
     }
 }
+
+/* ===================== Reports ===================== */
+
+.text-right {
+    text-align: right;
+}
+
+/* table.data-table thead th sets text-align:left with higher specificity
+   than the .text-right utility alone - this beats it back for numeric
+   column headers so they actually line up with their right-aligned data. */
+table.data-table thead th.text-right {
+    text-align: right;
+}
+
+table.data-table tfoot td {
+    padding: 0.75rem 1rem;
+    border-top: 2px solid var(--color-border);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.custom-range-fields {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.custom-range-fields label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.custom-range-fields input[type="date"] {
+    width: auto;
+}
+
+@media (max-width: 720px) {
+    .custom-range-fields {
+        width: 100%;
+    }
+}
+
+/* ===================== Print ===================== */
+
+@media print {
+    .sidebar,
+    .topbar,
+    .no-print {
+        display: none !important;
+    }
+
+    .app-main {
+        margin: 0 !important;
+    }
+
+    .page-content {
+        /* A flush 0 here would let chart tick labels/last columns butt
+           right up against the page edge and clip - keep a small margin. */
+        padding: 0.3in 0.35in !important;
+        max-width: none !important;
+    }
+
+    body {
+        background: #fff !important;
+    }
+
+    .card,
+    .chart-card {
+        box-shadow: none !important;
+        border-color: #ccc !important;
+        break-inside: avoid;
+    }
+
+    .chart-canvas-wrap {
+        height: 180px !important;
+    }
+
+    .chart-skeleton,
+    .loading-inline {
+        display: none !important;
+    }
+}

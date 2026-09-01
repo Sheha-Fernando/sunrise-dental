@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentist Availability - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<script>window.PAGE_ROLES = ["ADMIN", "RECEPTIONIST"];</script>
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1>Dentist Availability</h1>
+            <p class="page-subtitle">View dentist schedules and working availability for appointment planning.</p>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="toolbar-search">
+            <input type="search" id="filterSearch" placeholder="Search dentist...">
+        </div>
+        <select id="filterWorkingStatus">
+            <option value="">All dentists</option>
+            <option value="working">Working today</option>
+            <option value="notWorking">Not working today</option>
+        </select>
+        <select id="filterSpecialty">
+            <option value="">All specialties</option>
+        </select>
+        <label for="viewDate" style="font-size:0.85rem;color:var(--color-text-muted);">Date</label>
+        <input type="date" id="viewDate" aria-label="Date to view availability for">
+        <button type="button" class="btn btn-secondary btn-sm" id="clearFiltersBtn">Clear Filters</button>
+    </div>
+    <p class="page-subtitle" id="viewDateLabel" style="margin:-0.75rem 0 1.1rem;"></p>
+
+    <div class="card">
+        <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading dentists...</div></div>
+    </div>
+</template>
+
+<div class="modal-overlay" id="scheduleModalOverlay">
+    <div class="modal" style="max-width:560px;" role="dialog" aria-modal="true" aria-labelledby="scheduleModalTitle">
+        <button type="button" class="modal-close" id="closeScheduleModal" aria-label="Close">&times;</button>
+        <h2 id="scheduleModalTitle">Schedule</h2>
+        <p class="page-subtitle" id="scheduleModalSubtitle" style="margin-top:-0.5rem;"></p>
+        <div id="scheduleModalBody"><div class="loading-inline"><span class="spinner"></span> Loading schedule...</div></div>
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/dentist-availability.js"></script>
+</body>
+</html>
