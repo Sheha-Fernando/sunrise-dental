@@ -191,22 +191,66 @@ button {
 }
 
 .topbar-search {
+    position: relative;
     flex: 1;
-    max-width: 360px;
+    max-width: 380px;
 }
 
-.topbar-search input {
+.topbar-search-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: var(--color-text-faint);
+    pointer-events: none;
+    transition: color 0.15s ease;
+}
+
+.topbar-search input[type="search"] {
     width: 100%;
     border: 1px solid var(--color-border);
     background: var(--color-surface-sunken);
-    border-radius: var(--radius-sm);
-    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+    padding: 0.5rem 0.9rem 0.5rem 2.4rem;
     font-size: 0.85rem;
     color: var(--color-text);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .topbar-search input::placeholder {
     color: var(--color-text-faint);
+}
+
+.topbar-search input:hover {
+    border-color: var(--color-text-faint);
+}
+
+.topbar-search input:focus {
+    outline: none;
+    background: var(--color-surface);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-tint);
+}
+
+.topbar-search:focus-within .topbar-search-icon {
+    color: var(--color-accent-dark);
+}
+
+.topbar-search input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 14px;
+    width: 14px;
+    margin-left: 0.4rem;
+    cursor: pointer;
+    background: currentColor;
+    color: var(--color-text-faint);
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5 5L15 15M15 5L5 15' stroke='black' stroke-width='2' stroke-linecap='round' fill='none'/></svg>");
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5 5L15 15M15 5L5 15' stroke='black' stroke-width='2' stroke-linecap='round' fill='none'/></svg>");
+    -webkit-mask-size: contain;
+    mask-size: contain;
 }
 
 .topbar-user {
@@ -407,12 +451,22 @@ button {
 }
 
 .section-title-search {
+    position: relative;
     width: 280px;
     max-width: 100%;
 }
 
-.section-title-search input {
+.section-title-search input[type="search"] {
     margin: 0;
+    padding-left: 2.3rem;
+}
+
+.section-title-search .toolbar-search-icon {
+    left: 0.75rem;
+}
+
+.section-title-search:focus-within .toolbar-search-icon {
+    color: var(--color-accent-dark);
 }
 
 /* ===================== Cards ===================== */
@@ -991,8 +1045,29 @@ table.data-table tbody tr.clickable:hover {
 }
 
 .toolbar .toolbar-search {
+    position: relative;
     flex: 1;
     min-width: 200px;
+}
+
+.toolbar-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: var(--color-text-faint);
+    pointer-events: none;
+    transition: color 0.15s ease;
+}
+
+.toolbar-search input[type="search"] {
+    padding-left: 2.3rem;
+}
+
+.toolbar-search:focus-within .toolbar-search-icon {
+    color: var(--color-accent-dark);
 }
 
 .toolbar select,

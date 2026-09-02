@@ -62,6 +62,8 @@
         document.getElementById("generalStaffTab").classList.toggle("active", tab === "general");
         document.getElementById("doctorTabPanel").hidden = tab !== "doctor";
         document.getElementById("generalTabPanel").hidden = tab !== "general";
+        document.getElementById("doctorStaffStats").hidden = tab !== "doctor";
+        document.getElementById("generalStaffStats").hidden = tab !== "general";
     }
 
     async function loadDentists() {
@@ -111,6 +113,7 @@
 
             if (allDentists.length === 0) {
                 container.innerHTML = `<div class="empty-state"><div class="empty-title">No dentists found</div></div>`;
+                updateDoctorStats([], 0);
                 return;
             }
 
@@ -118,6 +121,8 @@
             for (const a of appointments) {
                 countByName.set(a.dentistName, (countByName.get(a.dentistName) || 0) + 1);
             }
+
+            updateDoctorStats(allDentists, appointments.length);
 
             const rows = allDentists.map(d => {
                 const user = staffList.find(s => s.role === "DENTIST" && s.dentistId === d.dentistId);
@@ -148,6 +153,27 @@
         }
     }
 
+    function updateDoctorStats(dentists, appointmentCount) {
+        Metrics.render(document.getElementById("doctorStaffStatsRow"), [
+            { label: "total dentists", value: dentists.length },
+            { label: "active", value: dentists.filter(d => d.isActive).length },
+            { label: "appointments this month", value: appointmentCount },
+        ]);
+    }
+
+    function updateGeneralStats(staff) {
+        const counts = { ADMIN: 0, RECEPTIONIST: 0, BILLING: 0, CLINICAL_ASSISTANT: 0 };
+        staff.filter(s => s.role !== "DENTIST").forEach(s => {
+            if (Object.prototype.hasOwnProperty.call(counts, s.role)) counts[s.role]++;
+        });
+        Metrics.render(document.getElementById("generalStaffStatsRow"), [
+            { label: "administrator", value: counts.ADMIN },
+            { label: "front desk reception", value: counts.RECEPTIONIST },
+            { label: "billing staff", value: counts.BILLING },
+            { label: "clinical assistants", value: counts.CLINICAL_ASSISTANT },
+        ]);
+    }
+
     // ------------------------------------------------------------- general staff ----
 
     async function loadStaff() {
@@ -168,6 +194,7 @@
     function renderStaff() {
         const container = document.getElementById("listContainer");
         const generalStaff = staffList.filter(s => s.role !== "DENTIST");
+        updateGeneralStats(staffList);
         if (generalStaff.length === 0) {
             container.innerHTML = `<div class="empty-state"><div class="empty-title">No staff accounts found</div></div>`;
             return;

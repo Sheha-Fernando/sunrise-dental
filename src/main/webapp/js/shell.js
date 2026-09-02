@@ -100,6 +100,10 @@ const Shell = (() => {
             <div class="app-main">
                 <header class="topbar">
                     <div class="topbar-search">
+                        <svg class="topbar-search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <circle cx="9" cy="9" r="6.25" stroke="currentColor" stroke-width="1.6"/>
+                            <line x1="13.6" y1="13.6" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                        </svg>
                         <input type="search" id="shellSearchInput" placeholder="Search patients, appointments...">
                     </div>
                     <div class="topbar-user">

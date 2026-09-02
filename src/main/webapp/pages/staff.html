@@ -30,9 +30,15 @@
     <div id="staffAlert" class="alert alert-error" role="alert"></div>
 
     <div id="doctorTabPanel" class="tab-panel">
+        <div class="card" id="doctorStaffStats" style="margin-bottom:1.25rem;">
+            <div id="doctorStaffStatsRow" class="status-summary-row"></div>
+        </div>
         <div id="dentistListContainer"><div class="loading-inline"><span class="spinner"></span> Loading dentists...</div></div>
     </div>
     <div id="generalTabPanel" class="tab-panel" hidden>
+        <div class="card" id="generalStaffStats" style="margin-bottom:1.25rem;" hidden>
+            <div id="generalStaffStatsRow" class="status-summary-row"></div>
+        </div>
         <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading staff...</div></div>
     </div>
 </template>
@@ -175,6 +181,7 @@
 <script src="../js/format.js"></script>
 <script src="../js/shell.js"></script>
 <script src="../js/toast.js"></script>
+<script src="../js/metrics.js"></script>
 <script src="../js/staff.js"></script>
 </body>
 </html>
