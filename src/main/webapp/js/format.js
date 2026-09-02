@@ -42,12 +42,14 @@ const Fmt = (() => {
         switch ((status || "").toUpperCase()) {
             case "COMPLETED": return "badge badge-completed";
             case "CANCELLED": return "badge badge-cancelled";
+            case "CHECKED_IN": return "badge badge-checked_in";
             default: return "badge badge-scheduled";
         }
     }
 
     function statusLabel(status) {
         const s = (status || "").toUpperCase();
+        if (s === "CHECKED_IN") return "Checked In";
         return s.charAt(0) + s.slice(1).toLowerCase();
     }
 

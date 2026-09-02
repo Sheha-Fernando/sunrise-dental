@@ -66,6 +66,20 @@ public class UserDAO {
         return users;
     }
 
+    /** Every active user, regardless of role - the notification recipient-resolution source list. */
+    public List<User> findActive() throws SQLException {
+        String sql = "SELECT " + SELECT_COLUMNS + "FROM users WHERE is_active = TRUE ORDER BY full_name";
+        List<User> users = new ArrayList<>();
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                users.add(mapRow(rs));
+            }
+        }
+        return users;
+    }
+
     public boolean existsByUsername(String username) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
             return existsByUsername(conn, username);

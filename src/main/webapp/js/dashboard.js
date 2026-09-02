@@ -459,83 +459,427 @@
         }
     }
 
-    // --- DENTIST ---------------------------------------------------------------
+    // --- DENTIST -----------------------------------------------------------
+    // Fully separate, self-contained redesign: removes every generic shared
+    // dashboard block below and renders only into #dentistDashboard, so this
+    // cannot affect the Admin/Receptionist/Billing/Clinical Assistant layouts
+    // (which keep using chartCardHtml/renderScheduleTable/Metrics.render as-is).
+
+    const DD_TREATMENT_COLORS = {
+        "Extraction": "#c98500",
+        "Cleaning": "#2a78d6",
+        "Consultation": "#1baf7a",
+        "Filling": "#8F7440",
+        "Root Canal": "#A6403A",
+        "Dental X-Ray": "#6B706D",
+    };
+    const DD_FALLBACK_PALETTE = ["#c98500", "#2a78d6", "#1baf7a", "#8F7440", "#A6403A", "#6B706D", "#EB6834", "#1D5D95"];
+
+    function ddColorFor(treatmentName, index) {
+        return DD_TREATMENT_COLORS[treatmentName] || DD_FALLBACK_PALETTE[index % DD_FALLBACK_PALETTE.length];
+    }
+
+    function ddInitials(name) {
+        const parts = (name || "").trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return "?";
+        return (parts[0].charAt(0) + (parts.length > 1 ? parts[parts.length - 1].charAt(0) : "")).toUpperCase();
+    }
+
+    const DENTIST_DASHBOARD_SKELETON = `
+        <div class="dd-stats-row" id="ddStatsRow"></div>
+
+        <div class="dd-card dd-next-patient" id="ddNextPatientCard"></div>
+
+        <div class="dd-analytics-row">
+            <div class="dd-card">
+                <div class="dd-card-header">
+                    <h2 class="dd-card-title">My treatment overview</h2>
+                    <span class="dd-card-caption">This month</span>
+                </div>
+                <div class="dd-donut-wrap" id="ddTreatmentChart-wrap"><div class="chart-skeleton"></div></div>
+                <div class="dd-legend" id="ddTreatmentChart-legend"></div>
+            </div>
+            <div class="dd-card">
+                <div class="dd-card-header">
+                    <h2 class="dd-card-title">Completion rate this week</h2>
+                </div>
+                <div class="dd-line-wrap" id="ddCompletionChart-wrap"><div class="chart-skeleton"></div></div>
+                <p class="dd-summary" id="ddCompletionSummary"></p>
+            </div>
+        </div>
+
+        <div class="dd-card">
+            <h2 class="dd-card-title" style="margin-bottom:0.9rem;">My schedule</h2>
+            <div id="ddScheduleContainer"></div>
+        </div>`;
+
+    function ddInsertDonutCanvas(ariaLabel) {
+        document.getElementById("ddTreatmentChart-wrap").innerHTML =
+            `<canvas id="ddTreatmentChart" role="img" aria-label="${escapeHtml(ariaLabel)}"></canvas>` +
+            `<div class="dd-donut-center" id="ddDonutCenter"></div>`;
+    }
+
+    function ddInsertLineCanvas(ariaLabel) {
+        document.getElementById("ddCompletionChart-wrap").innerHTML =
+            `<canvas id="ddCompletionChart" role="img" aria-label="${escapeHtml(ariaLabel)}"></canvas>`;
+    }
+
+    function renderDentistStats(today, upcoming, completedTodayCount) {
+        document.getElementById("ddStatsRow").innerHTML = [
+            { value: today.length, label: "today's appointments" },
+            { value: completedTodayCount, label: "patients seen today" },
+            { value: upcoming.length, label: "upcoming appointments" },
+        ].map(s => `<div class="dd-stat-card">
+            <div class="dd-stat-value">${s.value}</div>
+            <div class="dd-stat-label">${s.label}</div>
+        </div>`).join("");
+    }
+
+    function renderDentistNextPatient(nextAppointment) {
+        const card = document.getElementById("ddNextPatientCard");
+        if (!nextAppointment) {
+            card.innerHTML = `<div class="dd-empty" style="width:100%;">No upcoming patients</div>`;
+            return;
+        }
+        card.innerHTML = `
+            <div class="dd-next-patient-left">
+                <div class="dd-avatar">${escapeHtml(ddInitials(nextAppointment.patientName))}</div>
+                <div>
+                    <div class="dd-next-patient-label">Next patient</div>
+                    <div class="dd-next-patient-name">${escapeHtml(nextAppointment.patientName)}</div>
+                    <div class="dd-next-patient-treatment">${escapeHtml(nextAppointment.treatmentType)}</div>
+                </div>
+            </div>
+            <div class="dd-next-patient-right">
+                <div class="dd-next-patient-time">${Fmt.time(nextAppointment.appointmentTime)}</div>
+                <div class="dd-next-patient-date">${Fmt.date(nextAppointment.appointmentDate)}</div>
+            </div>`;
+    }
+
+    function renderDentistTreatmentDonut(monthCompletedAppointments) {
+        if (monthCompletedAppointments.length === 0) {
+            showChartEmpty("ddTreatmentChart", "No treatment data available this month.");
+            document.getElementById("ddDonutCenter")?.remove();
+            return;
+        }
+        ddInsertDonutCanvas("Donut chart showing this month's completed treatment distribution.");
+
+        const counts = new Map();
+        for (const a of monthCompletedAppointments) {
+            counts.set(a.treatmentType, (counts.get(a.treatmentType) || 0) + 1);
+        }
+        const entries = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+        const total = monthCompletedAppointments.length;
+        const colors = entries.map(([name], i) => ddColorFor(name, i));
+
+        destroyChart("ddTreatmentChart");
+        chartInstances.ddTreatmentChart = new Chart(document.getElementById("ddTreatmentChart").getContext("2d"), {
+            type: "doughnut",
+            data: { labels: entries.map(e => e[0]), datasets: [{ data: entries.map(e => e[1]), backgroundColor: colors, borderWidth: 0 }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "70%",
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / total * 100)}%)` } }
+                }
+            }
+        });
+
+        document.getElementById("ddDonutCenter").innerHTML =
+            `<div class="dd-donut-center-value">${total}</div><div class="dd-donut-center-label">treatments</div>`;
+
+        document.getElementById("ddTreatmentChart-legend").innerHTML = entries.map(([name, count], i) => {
+            const pct = Math.round(count / total * 100);
+            return `<span class="dd-legend-item">
+                <span class="dd-legend-swatch" style="background:${colors[i]}"></span>
+                ${escapeHtml(name)} ${pct}%
+            </span>`;
+        }).join("");
+    }
+
+    function renderDentistCompletionChart(weekAppointments) {
+        const monday = mondayOfWeek(new Date());
+        const weekdayDates = [];
+        for (let i = 0; i < 5; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            weekdayDates.push(d.toISOString().split("T")[0]);
+        }
+        const labels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+        let totalCompleted = 0;
+        let totalCountable = 0;
+        const rates = weekdayDates.map(date => {
+            const dayAppointments = weekAppointments.filter(a => a.appointmentDate === date && a.status !== "CANCELLED");
+            if (dayAppointments.length === 0) return null; // no data that day - don't plot a misleading 0%
+            const completed = dayAppointments.filter(a => a.status === "COMPLETED").length;
+            totalCompleted += completed;
+            totalCountable += dayAppointments.length;
+            return Math.round((completed / dayAppointments.length) * 100);
+        });
+
+        const summaryEl = document.getElementById("ddCompletionSummary");
+        if (totalCountable === 0) {
+            showChartEmpty("ddCompletionChart", "No appointment data available this week.");
+            summaryEl.textContent = "No scheduled appointments this week.";
+            return;
+        }
+        ddInsertLineCanvas("Line chart showing appointment completion rate for each weekday this week.");
+
+        destroyChart("ddCompletionChart");
+        chartInstances.ddCompletionChart = new Chart(document.getElementById("ddCompletionChart").getContext("2d"), {
+            type: "line",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Completion rate", data: rates,
+                    borderColor: "#2a78d6", backgroundColor: "rgba(42,120,214,0.12)",
+                    pointBackgroundColor: "#2a78d6", pointRadius: 3, borderWidth: 2,
+                    tension: 0.1, fill: true, spanGaps: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => ctx.parsed.y == null ? "No appointments" : `${ctx.parsed.y}% completed` } }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { min: 0, max: 100, grid: { color: "rgba(32,35,33,0.06)" }, ticks: { callback: (v) => v + "%" } }
+                }
+            }
+        });
+
+        const overallRate = Math.round((totalCompleted / totalCountable) * 100);
+        summaryEl.innerHTML = `Averaging <strong>${overallRate}%</strong> of scheduled appointments completed.`;
+    }
+
+    function ddStatusPill(status) {
+        const key = (status || "").toUpperCase();
+        const cls = key === "COMPLETED" ? "dd-status-completed"
+            : key === "CANCELLED" ? "dd-status-cancelled"
+            : key === "CHECKED_IN" ? "dd-status-checked-in"
+            : "dd-status-scheduled";
+        return `<span class="dd-status-pill ${cls}"><span class="dd-status-dot"></span>${escapeHtml(Fmt.statusLabel(status).toLowerCase())}</span>`;
+    }
+
+    function renderDentistSchedule(today) {
+        const container = document.getElementById("ddScheduleContainer");
+        if (today.length === 0) {
+            container.innerHTML = `<div class="dd-empty">No appointments today</div>`;
+            return;
+        }
+        const sorted = [...today].sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime));
+        container.innerHTML = sorted.map(a => `
+            <div class="dd-schedule-row">
+                <div class="dd-schedule-time">${Fmt.time(a.appointmentTime)}</div>
+                <div class="dd-schedule-main">
+                    <div class="dd-schedule-patient">${escapeHtml(a.patientName)}</div>
+                    <div class="dd-schedule-treatment">${escapeHtml(a.treatmentType)}</div>
+                </div>
+                ${ddStatusPill(a.status)}
+            </div>`).join("");
+    }
 
     async function loadDentistDashboard() {
-        document.getElementById("secondaryCard").remove?.();
-        document.querySelector(".card:has(#quickActions)")?.remove?.();
-        document.getElementById("scheduleTitle").textContent = "My Schedule";
+        document.getElementById("secondaryCard")?.remove();
+        document.querySelector(".card:has(#quickActions)")?.remove();
+        document.getElementById("statCardsCard")?.remove();
+        document.getElementById("chartsSection")?.remove();
+        document.querySelector(".card:has(#scheduleContainer)")?.remove();
+        document.getElementById("activityCard")?.remove();
 
-        const chartsSection = document.getElementById("chartsSection");
-        chartsSection.style.display = "block";
-        chartsSection.innerHTML = `<div class="chart-grid single">
-            ${chartCardHtml("myTreatmentChart", "My Treatment Overview", "This month")}
-        </div>`;
+        const dash = document.getElementById("dentistDashboard");
+        dash.style.display = "flex";
+        dash.innerHTML = `<div class="dd-card"><div class="loading-inline"><span class="spinner"></span> Loading your dashboard...</div></div>`;
 
         try {
             const [today, all] = await Promise.all([
                 Api.get("/appointments?date=" + todayIso()),
                 Api.get("/appointments"),
             ]);
+
+            dash.innerHTML = DENTIST_DASHBOARD_SKELETON;
+
             const upcoming = nextUpcoming(all);
-            const nextToday = upcoming.find(a => a.appointmentDate === todayIso());
-            const nextPatientLabel = nextToday
-                ? `${nextToday.patientName} &middot; ${Fmt.time(nextToday.appointmentTime)}`
-                : (upcoming[0] ? `${upcoming[0].patientName} &middot; ${Fmt.date(upcoming[0].appointmentDate)}` : "None scheduled");
-            const completed = today.filter(a => a.status === "COMPLETED").length;
+            const completedTodayCount = today.filter(a => a.status === "COMPLETED").length;
+            renderDentistStats(today, upcoming, completedTodayCount);
+            renderDentistNextPatient(upcoming[0] || null);
 
-            Metrics.render(document.getElementById("statCards"), [
-                { label: "Today's Appointments", value: today.length },
-                { label: "Next Patient", value: nextPatientLabel, color: "#B89552" },
-                { label: "Patients Seen Today", value: completed },
-                { label: "Upcoming Appointments", value: upcoming.length },
-            ]);
+            const monthCompleted = all.filter(a => a.appointmentDate.startsWith(monthPrefix()) && a.status === "COMPLETED");
+            renderDentistTreatmentDonut(monthCompleted);
 
-            const thisMonth = all.filter(a => a.appointmentDate.startsWith(monthPrefix()));
-            renderTreatmentsDoughnut("myTreatmentChart", thisMonth, "No treatment data available for this month.");
+            const monday = mondayOfWeek(new Date());
+            const friday = new Date(monday);
+            friday.setDate(monday.getDate() + 4);
+            const mondayIso = monday.toISOString().split("T")[0];
+            const fridayIso = friday.toISOString().split("T")[0];
+            const weekAppointments = all.filter(a => a.appointmentDate >= mondayIso && a.appointmentDate <= fridayIso);
+            renderDentistCompletionChart(weekAppointments);
 
-            renderScheduleTable(today, "You have no appointments scheduled for today.");
+            renderDentistSchedule(today);
         } catch (err) {
-            document.getElementById("scheduleContainer").innerHTML =
-                `<div class="empty-state"><div class="empty-desc">We couldn't load your schedule. Please try again.</div></div>`;
-            showChartError("myTreatmentChart", loadDentistDashboard);
+            dash.innerHTML = `<div class="dd-card"><div class="empty-state">
+                <div class="empty-title">We couldn't load your dashboard</div>
+                <div class="empty-desc">${escapeHtml(err.message || "Please try again.")}</div>
+                <button type="button" class="btn btn-secondary" style="margin-top:0.9rem;" id="ddRetryBtn">Retry</button>
+            </div></div>`;
+            document.getElementById("ddRetryBtn").addEventListener("click", loadDentistDashboard);
         }
     }
 
-    // --- CLINICAL ASSISTANT -----------------------------------------------------
+    // --- CLINICAL ASSISTANT -------------------------------------------------
+    // Fully separate, self-contained redesign: removes every generic shared
+    // dashboard block below and renders only into #clinicalAssistantDashboard,
+    // so this cannot affect the Admin/Receptionist/Billing/Dentist layouts.
+
+    const CA_DASHBOARD_SKELETON = `
+        <div class="ca-context-bar" id="caContextBar"></div>
+        <div class="ca-stats-row" id="caStatsRow"></div>
+        <div class="ca-card">
+            <h2 class="ca-card-title">Today's clinical schedule</h2>
+            <div id="caScheduleContainer"></div>
+        </div>`;
+
+    function caStatusPill(status) {
+        const key = (status || "").toUpperCase();
+        const cls = key === "COMPLETED" ? "ca-status-completed"
+            : key === "CANCELLED" ? "ca-status-cancelled"
+            : key === "CHECKED_IN" ? "ca-status-checked-in"
+            : "ca-status-scheduled";
+        return `<span class="ca-status-pill ${cls}"><span class="ca-status-dot"></span>${escapeHtml(Fmt.statusLabel(status).toLowerCase())}</span>`;
+    }
+
+    function renderCaContextBar(assignedDentistName, nextAppointment) {
+        const rightHtml = nextAppointment
+            ? `<span class="ca-context-label">Next patient</span>
+               <span class="ca-context-value">${escapeHtml(nextAppointment.patientName)}</span>
+               <span class="ca-context-time">&middot; ${nextAppointment.appointmentDate === todayIso() ? Fmt.time(nextAppointment.appointmentTime) : Fmt.date(nextAppointment.appointmentDate)}</span>`
+            : `<span class="ca-context-label">No upcoming patients</span>`;
+
+        document.getElementById("caContextBar").innerHTML = `
+            <div class="ca-context-left">
+                <span class="ca-context-icon" aria-hidden="true">⚕</span>
+                <span class="ca-context-label">Assisting</span>
+                <span class="ca-context-value">${escapeHtml(assignedDentistName)}</span>
+            </div>
+            <div class="ca-context-right">${rightHtml}</div>`;
+    }
+
+    function renderCaStats(todayCount, completedCount, upcomingCount) {
+        document.getElementById("caStatsRow").innerHTML = [
+            { value: todayCount, label: "today's appointments" },
+            { value: completedCount, label: "completed today" },
+            { value: upcomingCount, label: "upcoming patients" },
+        ].map(s => `<div class="ca-stat-card">
+            <div class="ca-stat-value">${s.value}</div>
+            <div class="ca-stat-label">${s.label}</div>
+        </div>`).join("");
+    }
+
+    function renderCaSchedule(todayAppointments, onCheckIn) {
+        const container = document.getElementById("caScheduleContainer");
+        if (todayAppointments.length === 0) {
+            container.innerHTML = `<div class="ca-empty">No appointments today</div>`;
+            return;
+        }
+        const sorted = [...todayAppointments].sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime));
+        container.innerHTML = sorted.map(a => `
+            <div class="ca-schedule-row">
+                <div class="ca-schedule-time">${Fmt.time(a.appointmentTime)}</div>
+                <div class="ca-schedule-main">
+                    <div class="ca-schedule-patient">${escapeHtml(a.patientName)}</div>
+                    <div class="ca-schedule-meta">${escapeHtml(a.treatmentType)} &middot; ${escapeHtml(a.dentistName)}</div>
+                </div>
+                <div class="ca-schedule-actions">
+                    ${caStatusPill(a.status)}
+                    ${a.status === "SCHEDULED" ? `<button type="button" class="btn btn-secondary btn-sm" data-checkin="${escapeHtml(a.appointmentNumber)}">Check in</button>` : ""}
+                </div>
+            </div>`).join("");
+
+        container.querySelectorAll("[data-checkin]").forEach(btn => {
+            btn.addEventListener("click", () => onCheckIn(btn.dataset.checkin, btn));
+        });
+    }
 
     async function loadClinicalAssistantDashboard(session) {
-        document.getElementById("secondaryCard").remove?.();
-        document.querySelector(".card:has(#quickActions)")?.remove?.();
-        document.getElementById("scheduleTitle").textContent = "Today's Clinical Schedule";
+        document.getElementById("secondaryCard")?.remove();
+        document.querySelector(".card:has(#quickActions)")?.remove();
+        document.getElementById("statCardsCard")?.remove();
+        document.getElementById("chartsSection")?.remove();
+        document.querySelector(".card:has(#scheduleContainer)")?.remove();
+        document.getElementById("activityCard")?.remove();
+
+        const dash = document.getElementById("clinicalAssistantDashboard");
+        dash.style.display = "flex";
+
+        if (!session.assignedDentistId) {
+            dash.innerHTML = `<div class="ca-card"><div class="ca-empty">No dentist assigned</div></div>`;
+            return;
+        }
+
+        dash.innerHTML = `<div class="ca-card"><div class="loading-inline"><span class="spinner"></span> Loading your dashboard...</div></div>`;
+
+        let today = [];
+        let all = [];
+        let assignedDentistName = "Not assigned";
+
+        function renderAll() {
+            const upcoming = nextUpcoming(all);
+            const completedCount = today.filter(a => a.status === "COMPLETED").length;
+
+            renderCaContextBar(assignedDentistName, upcoming[0] || null);
+            renderCaStats(today.length, completedCount, upcoming.length);
+            renderCaSchedule(today, handleCheckIn);
+        }
+
+        async function handleCheckIn(appointmentNumber, buttonEl) {
+            buttonEl.disabled = true;
+            buttonEl.textContent = "Checking in...";
+            try {
+                const result = await Api.put(`/appointments/${encodeURIComponent(appointmentNumber)}/status?status=CHECKED_IN`);
+                Toast.success(result.message || `Appointment ${appointmentNumber} has been checked in.`);
+
+                const markCheckedIn = (list) => {
+                    const match = list.find(a => a.appointmentNumber === appointmentNumber);
+                    if (match) match.status = "CHECKED_IN";
+                };
+                markCheckedIn(today);
+                markCheckedIn(all);
+
+                renderAll();
+            } catch (err) {
+                Toast.error(err.message || "We couldn't check in this patient right now. Please try again.");
+                buttonEl.disabled = false;
+                buttonEl.textContent = "Check in";
+            }
+        }
 
         try {
-            const [today, all, dentists] = await Promise.all([
+            const [todayData, allData, dentists] = await Promise.all([
                 Api.get("/appointments?date=" + todayIso()),
                 Api.get("/appointments"),
                 Api.get("/dentists"),
             ]);
-
+            today = todayData;
+            all = allData;
             const assignedDentist = dentists.find(d => d.dentistId === session.assignedDentistId);
-            const assignedDentistName = assignedDentist ? assignedDentist.dentistName : "Not assigned";
+            assignedDentistName = assignedDentist ? assignedDentist.dentistName : "Not assigned";
 
-            const upcoming = nextUpcoming(all);
-            const nextToday = upcoming.find(a => a.appointmentDate === todayIso());
-            const nextPatientLabel = nextToday
-                ? `${nextToday.patientName} &middot; ${Fmt.time(nextToday.appointmentTime)}`
-                : (upcoming[0] ? `${upcoming[0].patientName} &middot; ${Fmt.date(upcoming[0].appointmentDate)}` : "None scheduled");
-
-            Metrics.render(document.getElementById("statCards"), [
-                { label: "Assigned Dentist", value: escapeHtml(assignedDentistName), color: "#B89552" },
-                { label: "Today's Appointments", value: today.length },
-                { label: "Next Patient", value: nextPatientLabel },
-                { label: "Upcoming Patients", value: upcoming.length },
-            ]);
-
-            renderScheduleTable(today, "There are no appointments scheduled for today.");
+            dash.innerHTML = CA_DASHBOARD_SKELETON;
+            renderAll();
         } catch (err) {
-            document.getElementById("scheduleContainer").innerHTML =
-                `<div class="empty-state"><div class="empty-desc">We couldn't load your schedule. Please try again.</div></div>`;
+            dash.innerHTML = `<div class="ca-card"><div class="empty-state">
+                <div class="empty-title">We couldn't load your dashboard</div>
+                <div class="empty-desc">${escapeHtml(err.message || "Please try again.")}</div>
+                <button type="button" class="btn btn-secondary" style="margin-top:0.9rem;" id="caRetryBtn">Retry</button>
+            </div></div>`;
+            document.getElementById("caRetryBtn").addEventListener("click", () => loadClinicalAssistantDashboard(session));
         }
     }
 

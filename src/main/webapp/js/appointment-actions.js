@@ -42,6 +42,10 @@ const AppointmentActions = (() => {
         return !!session && (session.role === "ADMIN" || session.role === "DENTIST");
     }
 
+    function canCheckIn() {
+        return !!session && (session.role === "ADMIN" || session.role === "RECEPTIONIST" || session.role === "CLINICAL_ASSISTANT");
+    }
+
     function canBill() {
         return !!session && (session.role === "ADMIN" || session.role === "RECEPTIONIST" || session.role === "BILLING");
     }
@@ -56,6 +60,13 @@ const AppointmentActions = (() => {
                 links.push(`<button type="button" class="link-btn" data-ap-action="reschedule" data-ap-number="${escapeHtml(appointment.appointmentNumber)}">Reschedule</button>`);
                 links.push(`<button type="button" class="link-btn link-btn-danger" data-ap-action="cancel" data-ap-number="${escapeHtml(appointment.appointmentNumber)}">Cancel</button>`);
             }
+            if (canCheckIn()) {
+                links.push(`<button type="button" class="link-btn" data-ap-action="check-in" data-ap-number="${escapeHtml(appointment.appointmentNumber)}">Check In</button>`);
+            }
+            if (canComplete()) {
+                links.push(`<button type="button" class="link-btn" data-ap-action="complete" data-ap-number="${escapeHtml(appointment.appointmentNumber)}">Mark Completed</button>`);
+            }
+        } else if (appointment.status === "CHECKED_IN") {
             if (canComplete()) {
                 links.push(`<button type="button" class="link-btn" data-ap-action="complete" data-ap-number="${escapeHtml(appointment.appointmentNumber)}">Mark Completed</button>`);
             }
@@ -81,6 +92,7 @@ const AppointmentActions = (() => {
         const action = target.dataset.apAction;
         if (action === "cancel") openCancel(number, onDone);
         else if (action === "reschedule") openReschedule(number, onDone);
+        else if (action === "check-in") checkIn(number, onDone);
         else if (action === "complete") complete(number, onDone);
         else if (action === "bill") window.location.href = "billing.html?number=" + encodeURIComponent(number);
     }
@@ -183,6 +195,19 @@ const AppointmentActions = (() => {
                 confirmBtn.textContent = "Cancel Appointment";
             }
         });
+    }
+
+    // --- Check in -------------------------------------------------------------------
+
+    async function checkIn(appointmentNumber, onDone) {
+        try {
+            const result = await Api.put(`/appointments/${encodeURIComponent(appointmentNumber)}/status?status=CHECKED_IN`);
+            register(result.appointment);
+            Toast.success(result.message || `Appointment ${appointmentNumber} has been checked in.`);
+            if (onDone) onDone(result.appointment);
+        } catch (err) {
+            Toast.error(err.message || "We couldn't check in this patient right now. Please try again.");
+        }
     }
 
     // --- Mark completed -----------------------------------------------------------

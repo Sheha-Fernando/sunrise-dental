@@ -113,7 +113,15 @@ public class AppointmentServlet extends HttpServlet {
 
             if (target == AppointmentStatus.CANCELLED) {
                 AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST);
+            } else if (target == AppointmentStatus.CHECKED_IN) {
+                // A CLINICAL_ASSISTANT checks in a patient on behalf of the
+                // dentist they assist - AppointmentService.verifyDentistOwnership
+                // (called just below) enforces that this only ever succeeds
+                // for their own assigned dentist's appointments.
+                AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST, UserRole.CLINICAL_ASSISTANT);
             } else if (target == AppointmentStatus.COMPLETED) {
+                // Completing a visit is the dentist's own action, not the
+                // assistant's - checking in is what CLINICAL_ASSISTANT does.
                 AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.DENTIST);
             } else {
                 throw new BusinessException("This appointment status cannot be changed.");
@@ -122,13 +130,17 @@ public class AppointmentServlet extends HttpServlet {
             String reason = target == AppointmentStatus.CANCELLED ? req.getParameter("reason") : null;
 
             Appointment appointment = appointmentService.updateStatus(appointmentNumber, target, reason,
-                    AuthorizationUtil.currentRole(req), AuthorizationUtil.currentScopeDentistId(req));
+                    AuthorizationUtil.currentRole(req), AuthorizationUtil.currentScopeDentistId(req),
+                    AuthorizationUtil.currentUserId(req));
 
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");
-            body.put("message", target == AppointmentStatus.CANCELLED
-                    ? "Appointment " + appointment.getAppointmentNumber() + " has been cancelled successfully."
-                    : "Appointment " + appointment.getAppointmentNumber() + " has been marked as completed.");
+            String successMessage = switch (target) {
+                case CANCELLED -> "Appointment " + appointment.getAppointmentNumber() + " has been cancelled successfully.";
+                case CHECKED_IN -> "Appointment " + appointment.getAppointmentNumber() + " has been checked in.";
+                default -> "Appointment " + appointment.getAppointmentNumber() + " has been marked as completed.";
+            };
+            body.put("message", successMessage);
             body.put("appointment", toJson(appointment));
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(JsonUtil.write(body));
@@ -153,7 +165,8 @@ public class AppointmentServlet extends HttpServlet {
             LocalDate date = parseDate(req.getParameter("appointmentDate"));
             LocalTime time = parseTime(req.getParameter("appointmentTime"));
 
-            Appointment appointment = appointmentService.reschedule(appointmentNumber, dentistId, date, time);
+            Appointment appointment = appointmentService.reschedule(appointmentNumber, dentistId, date, time,
+                    AuthorizationUtil.currentUserId(req));
 
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");

@@ -45,7 +45,7 @@ public class BillServlet extends HttpServlet {
             if (appointmentNumber == null || appointmentNumber.isBlank()) {
                 throw new BusinessException("Appointment number is required.");
             }
-            Bill bill = billingService.generateBill(appointmentNumber);
+            Bill bill = billingService.generateBill(appointmentNumber, AuthorizationUtil.currentUserId(req));
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");
             body.put("message", "Bill generated successfully.");

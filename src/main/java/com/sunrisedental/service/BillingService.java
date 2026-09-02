@@ -25,6 +25,7 @@ public class BillingService {
     private final AppointmentDAO appointmentDAO;
     private final TreatmentDAO treatmentDAO;
     private final BillDAO billDAO;
+    private final NotificationService notificationService = new NotificationService();
 
     public BillingService() {
         this(new AppointmentDAO(), new TreatmentDAO(), new BillDAO());
@@ -42,6 +43,10 @@ public class BillingService {
      * own treatment - both read from the database, never hard-coded.
      */
     public Bill generateBill(String appointmentNumber) {
+        return generateBill(appointmentNumber, null);
+    }
+
+    public Bill generateBill(String appointmentNumber, Integer actingUserId) {
         try {
             Appointment appointment = appointmentDAO.findByAppointmentNumber(appointmentNumber)
                     .orElseThrow(() -> new BusinessException("Appointment not found."));
@@ -69,8 +74,10 @@ public class BillingService {
                 throw new BusinessException("A bill has already been generated for this appointment.");
             }
 
-            return billDAO.findByAppointmentId(appointment.getAppointmentId())
+            Bill created = billDAO.findByAppointmentId(appointment.getAppointmentId())
                     .orElseThrow(() -> new BusinessException("Unable to generate bill."));
+            notificationService.notifyBillGenerated(created, appointment.getPatient().getPatientName(), actingUserId);
+            return created;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Failed to generate bill", e);
             throw new BusinessException("Unable to generate bill.");

@@ -33,6 +33,10 @@ public class AppointmentService {
     private final DentistDAO dentistDAO;
     private final TreatmentDAO treatmentDAO;
     private final AppointmentDAO appointmentDAO;
+    // Best-effort side effect (see NotificationService.safely) - never
+    // parameterized via the DI constructor since it must always run for real,
+    // even for callers that inject fake DAOs for the other dependencies.
+    private final NotificationService notificationService = new NotificationService();
 
     public AppointmentService() {
         this(new PatientDAO(), new DentistDAO(), new TreatmentDAO(), new AppointmentDAO());
@@ -195,6 +199,7 @@ public class AppointmentService {
                 appointment.setCreatedBy(request.createdByUserId());
 
                 conn.commit();
+                notificationService.notifyAppointmentCreated(appointment, request.createdByUserId());
                 return appointment;
             } catch (BusinessException e) {
                 conn.rollback();
@@ -217,8 +222,15 @@ public class AppointmentService {
      */
     public Appointment updateStatus(String appointmentNumber, com.sunrisedental.model.AppointmentStatus newStatus,
                                      String cancellationReason, UserRole role, Integer scopeDentistId) {
+        return updateStatus(appointmentNumber, newStatus, cancellationReason, role, scopeDentistId, null);
+    }
+
+    public Appointment updateStatus(String appointmentNumber, com.sunrisedental.model.AppointmentStatus newStatus,
+                                     String cancellationReason, UserRole role, Integer scopeDentistId,
+                                     Integer actingUserId) {
         if (newStatus != com.sunrisedental.model.AppointmentStatus.COMPLETED
-                && newStatus != com.sunrisedental.model.AppointmentStatus.CANCELLED) {
+                && newStatus != com.sunrisedental.model.AppointmentStatus.CANCELLED
+                && newStatus != com.sunrisedental.model.AppointmentStatus.CHECKED_IN) {
             throw new BusinessException("This appointment status cannot be changed.");
         }
         String reason = normalizeCancellationReason(cancellationReason);
@@ -229,18 +241,16 @@ public class AppointmentService {
                 Appointment appointment = appointmentDAO.findByAppointmentNumber(conn, appointmentNumber)
                         .orElseThrow(() -> new BusinessException(APPOINTMENT_NOT_FOUND));
 
-                if (newStatus == com.sunrisedental.model.AppointmentStatus.COMPLETED) {
+                // Checking in and completing are both "this appointment is
+                // this dentist/assistant's own" operations; cancelling
+                // remains unscoped (ADMIN/RECEPTIONIST only, enforced by the
+                // servlet's role gate, not by dentist ownership).
+                if (newStatus == com.sunrisedental.model.AppointmentStatus.COMPLETED
+                        || newStatus == com.sunrisedental.model.AppointmentStatus.CHECKED_IN) {
                     verifyDentistOwnership(appointment, role, scopeDentistId);
                 }
 
-                switch (appointment.getStatus()) {
-                    case COMPLETED:
-                        throw new BusinessException("This appointment has already been completed and cannot be cancelled.");
-                    case CANCELLED:
-                        throw new BusinessException("This appointment has already been cancelled.");
-                    default:
-                        break;
-                }
+                validateTransition(appointment.getStatus(), newStatus);
 
                 appointmentDAO.updateStatus(conn, appointment.getAppointmentId(), newStatus,
                         newStatus == com.sunrisedental.model.AppointmentStatus.CANCELLED ? reason : null);
@@ -248,6 +258,13 @@ public class AppointmentService {
 
                 appointment.setStatus(newStatus);
                 appointment.setCancellationReason(newStatus == com.sunrisedental.model.AppointmentStatus.CANCELLED ? reason : null);
+
+                switch (newStatus) {
+                    case CANCELLED -> notificationService.notifyAppointmentCancelled(appointment, actingUserId);
+                    case CHECKED_IN -> notificationService.notifyPatientCheckedIn(appointment, actingUserId);
+                    case COMPLETED -> notificationService.notifyAppointmentCompleted(appointment, actingUserId);
+                    default -> { }
+                }
                 return appointment;
             } catch (BusinessException | ForbiddenException e) {
                 conn.rollback();
@@ -270,6 +287,11 @@ public class AppointmentService {
      * constraint remain the authoritative double-booking protection.
      */
     public Appointment reschedule(String appointmentNumber, int newDentistId, LocalDate newDate, LocalTime newTime) {
+        return reschedule(appointmentNumber, newDentistId, newDate, newTime, null);
+    }
+
+    public Appointment reschedule(String appointmentNumber, int newDentistId, LocalDate newDate, LocalTime newTime,
+                                   Integer actingUserId) {
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -303,6 +325,7 @@ public class AppointmentService {
                 appointment.setDentist(dentist);
                 appointment.setAppointmentDate(newDate);
                 appointment.setAppointmentTime(newTime);
+                notificationService.notifyAppointmentRescheduled(appointment, actingUserId);
                 return appointment;
             } catch (BusinessException e) {
                 conn.rollback();
@@ -315,6 +338,34 @@ public class AppointmentService {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Database connection error while rescheduling appointment", e);
             throw new BusinessException("Unable to connect to the database.");
+        }
+    }
+
+    /**
+     * Enforces the appointment lifecycle: SCHEDULED -> CHECKED_IN -> COMPLETED,
+     * with CANCELLED reachable from SCHEDULED or CHECKED_IN, and COMPLETED
+     * also reachable directly from SCHEDULED (a dentist may complete a visit
+     * without an assistant having checked the patient in first - not every
+     * clinic has a Clinical Assistant on duty). Messages for the COMPLETED/
+     * CANCELLED targets are unchanged from before CHECKED_IN existed, so
+     * existing callers/tests see identical wording.
+     */
+    private void validateTransition(com.sunrisedental.model.AppointmentStatus current,
+                                     com.sunrisedental.model.AppointmentStatus newStatus) {
+        if (newStatus == com.sunrisedental.model.AppointmentStatus.CHECKED_IN) {
+            switch (current) {
+                case CHECKED_IN -> throw new BusinessException("Patient is already checked in.");
+                case COMPLETED -> throw new BusinessException("This appointment has already been completed and cannot be checked in.");
+                case CANCELLED -> throw new BusinessException("Cancelled appointments cannot be checked in.");
+                default -> { } // SCHEDULED -> ok
+            }
+            return;
+        }
+        // COMPLETED or CANCELLED target - same rules as before CHECKED_IN existed.
+        switch (current) {
+            case COMPLETED -> throw new BusinessException("This appointment has already been completed and cannot be cancelled.");
+            case CANCELLED -> throw new BusinessException("This appointment has already been cancelled.");
+            default -> { } // SCHEDULED or CHECKED_IN -> ok
         }
     }
 

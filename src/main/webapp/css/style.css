@@ -1717,3 +1717,837 @@ table.data-table tfoot td {
         display: none !important;
     }
 }
+
+/* ===================== Dentist Dashboard (redesign) =====================
+   Scoped entirely under .dentist-dashboard / dd- prefixed classes so this
+   cannot affect the Admin/Receptionist/Billing/Clinical Assistant dashboard
+   layouts, which keep using the generic .card/.status-summary-row/etc rules
+   above. */
+
+.dentist-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.dd-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.dd-stat-card {
+    background: #FAF8F2;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+}
+
+.dd-stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.1;
+}
+
+.dd-stat-label {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin-top: 0.3rem;
+}
+
+.dd-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+.dd-next-patient {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.dd-next-patient-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-width: 0;
+}
+
+.dd-avatar {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 50%;
+    background: #E3EDF7;
+    color: #1D5D95;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.92rem;
+}
+
+.dd-next-patient-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.2rem;
+}
+
+.dd-next-patient-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    overflow-wrap: break-word;
+}
+
+.dd-next-patient-treatment {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-top: 0.1rem;
+    overflow-wrap: break-word;
+}
+
+.dd-next-patient-right {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.dd-next-patient-time {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.dd-next-patient-date {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: 0.15rem;
+}
+
+.dd-analytics-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.dd-card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+    gap: 0.75rem;
+}
+
+.dd-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.dd-card-caption {
+    font-size: 0.78rem;
+    color: var(--color-text-faint);
+    white-space: nowrap;
+}
+
+.dd-donut-wrap {
+    position: relative;
+    height: 190px;
+    width: 100%;
+    max-width: 220px;
+    margin: 0 auto;
+}
+
+.dd-donut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.dd-donut-center-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.1;
+}
+
+.dd-donut-center-label {
+    font-size: 0.68rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-top: 0.1rem;
+}
+
+.dd-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1rem;
+    margin-top: 1.1rem;
+}
+
+.dd-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--color-text);
+}
+
+.dd-legend-swatch {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.dd-line-wrap {
+    position: relative;
+    height: 190px;
+    width: 100%;
+}
+
+.dd-summary {
+    text-align: center;
+    font-size: 0.87rem;
+    color: var(--color-text-muted);
+    margin: 1.1rem 0 0;
+}
+
+.dd-schedule-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dd-schedule-row:last-child {
+    border-bottom: none;
+}
+
+.dd-schedule-time {
+    width: 64px;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.dd-schedule-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.dd-schedule-patient {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-text);
+    overflow-wrap: break-word;
+}
+
+.dd-schedule-treatment {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: 0.1rem;
+    overflow-wrap: break-word;
+}
+
+.dd-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: capitalize;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.dd-status-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dd-status-completed {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.dd-status-completed .dd-status-dot {
+    background: var(--color-success);
+}
+
+.dd-status-checked-in {
+    background: var(--color-accent-tint);
+    color: var(--color-accent-dark);
+}
+
+.dd-status-checked-in .dd-status-dot {
+    background: var(--color-accent);
+}
+
+.dd-status-scheduled {
+    background: var(--color-info-bg);
+    color: var(--color-info);
+}
+
+.dd-status-scheduled .dd-status-dot {
+    background: var(--color-info);
+}
+
+.dd-status-cancelled {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.dd-status-cancelled .dd-status-dot {
+    background: var(--color-danger);
+}
+
+.dd-empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.87rem;
+    padding: 1.5rem 0;
+}
+
+@media (max-width: 900px) {
+    .dd-analytics-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .dd-stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .dd-next-patient {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dd-next-patient-right {
+        text-align: left;
+    }
+}
+
+@media (max-width: 480px) {
+    /* At phone width the 64px time column leaves too little room for a
+       long patient name beside a status pill - wrap the row so time/pill
+       share the top line and the name/treatment get the full row width
+       underneath, indented to line up under where the name normally sits. */
+    .dd-schedule-row {
+        flex-wrap: wrap;
+        row-gap: 0.3rem;
+    }
+
+    .dd-schedule-time {
+        order: 1;
+    }
+
+    .dd-status-pill {
+        order: 2;
+        margin-left: auto;
+    }
+
+    .dd-schedule-main {
+        order: 3;
+        flex-basis: 100%;
+        padding-left: calc(64px + 1rem);
+    }
+}
+
+/* ============== Clinical Assistant Dashboard (redesign) ==============
+   Scoped entirely under .clinical-assistant-dashboard / ca- prefixed
+   classes so this cannot affect the Admin/Receptionist/Billing/Dentist
+   dashboard layouts. */
+
+.clinical-assistant-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.ca-context-bar {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 0.85rem 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.ca-context-left,
+.ca-context-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.ca-context-icon {
+    font-size: 1.05rem;
+    color: var(--color-info);
+    flex-shrink: 0;
+}
+
+.ca-context-label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+}
+
+.ca-context-value {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text);
+    overflow-wrap: break-word;
+}
+
+.ca-context-time {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+.ca-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.ca-stat-card {
+    background: #FAF8F2;
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+}
+
+.ca-stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.1;
+}
+
+.ca-stat-label {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin-top: 0.3rem;
+}
+
+.ca-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+.ca-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 0.9rem;
+}
+
+.ca-schedule-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.ca-schedule-row:last-child {
+    border-bottom: none;
+}
+
+.ca-schedule-time {
+    min-width: 70px;
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--color-text);
+}
+
+.ca-schedule-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.ca-schedule-patient {
+    font-size: 0.875rem;
+    color: var(--color-text);
+    overflow-wrap: break-word;
+}
+
+.ca-schedule-meta {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: 0.15rem;
+    overflow-wrap: break-word;
+}
+
+.ca-schedule-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+.ca-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ca-status-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ca-status-completed {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.ca-status-completed .ca-status-dot {
+    background: var(--color-success);
+}
+
+.ca-status-checked-in {
+    background: var(--color-accent-tint);
+    color: var(--color-accent-dark);
+}
+
+.ca-status-checked-in .ca-status-dot {
+    background: var(--color-accent);
+}
+
+.ca-status-scheduled {
+    background: var(--color-info-bg);
+    color: var(--color-info);
+}
+
+.ca-status-scheduled .ca-status-dot {
+    background: var(--color-info);
+}
+
+.ca-status-cancelled {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.ca-status-cancelled .ca-status-dot {
+    background: var(--color-danger);
+}
+
+.ca-empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.87rem;
+    padding: 1.5rem 0;
+}
+
+@media (max-width: 720px) {
+    .ca-stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .ca-context-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ca-context-right {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Same reasoning as the Dentist dashboard's schedule rows: give the
+       patient name/treatment the full row width instead of squeezing it
+       beside a status pill + Check in button at phone width. */
+    .ca-schedule-row {
+        flex-wrap: wrap;
+        row-gap: 0.4rem;
+    }
+
+    .ca-schedule-time {
+        order: 1;
+    }
+
+    .ca-schedule-actions {
+        order: 2;
+        margin-left: auto;
+    }
+
+    .ca-schedule-main {
+        order: 3;
+        flex-basis: 100%;
+        padding-left: calc(70px + 1rem);
+    }
+}
+
+/* ===================== Notifications ===================== */
+
+.notif-bell-wrap {
+    position: relative;
+}
+
+.notif-bell {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    background: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+.notif-bell:hover,
+.notif-bell:focus-visible {
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+}
+
+.notif-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--color-danger);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+}
+
+.notif-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    width: 380px;
+    max-width: min(380px, calc(100vw - 2rem));
+    max-height: 70vh;
+    overflow-y: auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    z-index: 50;
+}
+
+.notif-panel.open {
+    display: block;
+}
+
+.notif-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    background: var(--color-surface);
+}
+
+.notif-panel-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.notif-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.notif-panel-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-info);
+    cursor: pointer;
+}
+
+.notif-panel-footer {
+    padding: 0.7rem 1.1rem;
+    text-align: center;
+    border-top: 1px solid var(--color-border);
+}
+
+.notif-item {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.8rem 1.1rem;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+}
+
+.notif-item:last-child {
+    border-bottom: none;
+}
+
+.notif-item:hover {
+    background: var(--color-surface-sunken);
+}
+
+.notif-item.unread {
+    background: var(--color-accent-tint);
+}
+
+.notif-item.unread:hover {
+    background: #EFE6D2;
+}
+
+.notif-item-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 0.4rem;
+}
+
+.notif-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-item-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.notif-item-title {
+    font-size: 0.87rem;
+    color: var(--color-text);
+    overflow-wrap: break-word;
+}
+
+.notif-item.unread .notif-item-title {
+    font-weight: 700;
+}
+
+.notif-type-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--color-text-faint);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.notif-item-message {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    margin-top: 0.2rem;
+    overflow-wrap: break-word;
+}
+
+.notif-item-context {
+    font-size: 0.76rem;
+    color: var(--color-text-faint);
+    margin-top: 0.3rem;
+    overflow-wrap: break-word;
+}
+
+.notif-item-meta {
+    font-size: 0.74rem;
+    color: var(--color-text-faint);
+    margin-top: 0.25rem;
+}
+
+.notif-empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.87rem;
+    padding: 2.2rem 1.1rem;
+}
+
+.notif-empty .notif-empty-title {
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.3rem;
+}
+
+@media (max-width: 480px) {
+    .notif-panel {
+        width: calc(100vw - 1.5rem);
+        right: -0.75rem;
+    }
+}
+
+/* Recipient checklist inside the New Message modal */
+.notif-recipient-list {
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.7rem;
+}
+
+.notif-recipient-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    font-size: 0.85rem;
+    color: var(--color-text);
+}
+
+.notif-recipient-item input {
+    width: auto;
+    margin: 0;
+}
