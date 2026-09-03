@@ -5,9 +5,9 @@
     const CLINIC_TIMES = ["08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
         "13:30", "14:00", "14:30", "15:00", "15:30", "16:00"];
 
-    const STATUS_COLORS = { SCHEDULED: "#2A78D6", COMPLETED: "#1BAF7A", CANCELLED: "#EB6834" };
+    const STATUS_COLORS = { SCHEDULED: Theme.chart(0), COMPLETED: Theme.chart(1), CANCELLED: Theme.chart(2) };
     const STATUS_LABELS = { SCHEDULED: "Scheduled", COMPLETED: "Completed", CANCELLED: "Cancelled" };
-    const DOUGHNUT_PALETTE = ["#B89552", "#2A78D6", "#1BAF7A", "#EB6834", "#8F7440", "#1D5D95", "#A6403A", "#6B706D"];
+    const DOUGHNUT_PALETTE = [0, 1, 2, 3, 4, 5].map(i => Theme.chart(i));
 
     const chartInstances = {};
 
@@ -250,7 +250,7 @@
         destroyChart(canvasId);
         chartInstances[canvasId] = new Chart(document.getElementById(canvasId).getContext("2d"), {
             type: "bar",
-            data: { labels: dayLabels, datasets: [{ label: "Revenue", data: totals, backgroundColor: "#B89552", borderRadius: 4, maxBarThickness: 36 }] },
+            data: { labels: dayLabels, datasets: [{ label: "Revenue", data: totals, backgroundColor: Theme.chart(3), borderRadius: 4, maxBarThickness: 36 }] },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -267,7 +267,7 @@
 
         const legend = document.getElementById(canvasId + "-legend");
         legend.innerHTML = `<span class="chart-legend-item">
-            <span class="chart-legend-dot" style="background:#B89552"></span>
+            <span class="chart-legend-dot" style="background:${Theme.chart(3)}"></span>
             Total this week <span class="chart-legend-value">${Fmt.currency(grandTotal)}</span>
         </span>`;
     }
@@ -284,9 +284,9 @@
     function renderClinicOverview(totalPatients, activeDentists, revenue) {
         document.getElementById("summaryGridRow").style.display = "grid";
         Metrics.render(document.getElementById("clinicOverviewContainer"), [
-            { label: "Total Patients", value: totalPatients, color: "#2A78D6" },
-            { label: "Active Dentists", value: activeDentists, color: "#1BAF7A" },
-            { label: "Today's Revenue", value: Fmt.currency(revenue), color: "#B89552" },
+            { label: "Total Patients", value: totalPatients, color: Theme.chart(0) },
+            { label: "Active Dentists", value: activeDentists, color: Theme.chart(1) },
+            { label: "Today's Revenue", value: Fmt.currency(revenue), color: Theme.chart(3) },
         ]);
     }
 
@@ -305,7 +305,7 @@
             events.push({
                 time: timePart,
                 text: `Bill generated for ${escapeHtml(b.patientName)} (${escapeHtml(b.appointmentNumber)})`,
-                color: "#B89552"
+                color: Theme.chart(3)
             });
         }
         events.sort((x, y) => y.time.localeCompare(x.time));
@@ -466,17 +466,16 @@
     // (which keep using chartCardHtml/renderScheduleTable/Metrics.render as-is).
 
     const DD_TREATMENT_COLORS = {
-        "Extraction": "#c98500",
-        "Cleaning": "#2a78d6",
-        "Consultation": "#1baf7a",
-        "Filling": "#8F7440",
-        "Root Canal": "#A6403A",
-        "Dental X-Ray": "#6B706D",
+        "Extraction": Theme.chart(0),
+        "Cleaning": Theme.chart(1),
+        "Consultation": Theme.chart(2),
+        "Filling": Theme.chart(3),
+        "Root Canal": Theme.chart(4),
+        "Dental X-Ray": Theme.chart(5),
     };
-    const DD_FALLBACK_PALETTE = ["#c98500", "#2a78d6", "#1baf7a", "#8F7440", "#A6403A", "#6B706D", "#EB6834", "#1D5D95"];
 
     function ddColorFor(treatmentName, index) {
-        return DD_TREATMENT_COLORS[treatmentName] || DD_FALLBACK_PALETTE[index % DD_FALLBACK_PALETTE.length];
+        return DD_TREATMENT_COLORS[treatmentName] || Theme.chart(index);
     }
 
     function ddInitials(name) {
@@ -635,8 +634,8 @@
                 labels,
                 datasets: [{
                     label: "Completion rate", data: rates,
-                    borderColor: "#2a78d6", backgroundColor: "rgba(42,120,214,0.12)",
-                    pointBackgroundColor: "#2a78d6", pointRadius: 3, borderWidth: 2,
+                    borderColor: Theme.chart(0), backgroundColor: Theme.rgba("--sd-chart-1", 0.12),
+                    pointBackgroundColor: Theme.chart(0), pointRadius: 3, borderWidth: 2,
                     tension: 0.1, fill: true, spanGaps: true,
                 }]
             },
@@ -912,7 +911,7 @@
             const pending = appointments.filter(a => !billedNumbers.has(a.appointmentNumber));
 
             Metrics.render(document.getElementById("statCards"), [
-                { label: "Today's Revenue", value: Fmt.currency(revenue), color: "#B89552" },
+                { label: "Today's Revenue", value: Fmt.currency(revenue), color: Theme.chart(3) },
                 { label: "This Month's Revenue", value: Fmt.currency(monthRevenue) },
                 { label: "Bills Generated Today", value: todaysBills.length },
                 { label: "Pending Billing (Today)", value: pending.length },

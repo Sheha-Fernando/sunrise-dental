@@ -176,6 +176,22 @@ public class UserDAO {
         }
     }
 
+    /** Self-service password change - updates password_hash alone, nothing else. */
+    public void updatePassword(int userId, String passwordHash) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            updatePassword(conn, userId, passwordHash);
+        }
+    }
+
+    public void updatePassword(Connection conn, int userId, String passwordHash) throws SQLException {
+        String sql = "UPDATE users SET password_hash = ? WHERE user_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, passwordHash);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
     public void updateAssignedDentist(Connection conn, int userId, Integer assignedDentistId) throws SQLException {
         String sql = "UPDATE users SET assigned_dentist_id = ? WHERE user_id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

@@ -5,11 +5,9 @@
  * every page's metric grid looks and behaves identically.
  */
 const Metrics = (() => {
-    const PALETTE = ["#2A78D6", "#1BAF7A", "#B89552", "#1D5D95", "#EB6834", "#8F7440"];
-
     function row(items) {
         return items.map((item, index) => `<div class="status-summary-item">
-            <span class="status-summary-dot" style="background:${item.color || PALETTE[index % PALETTE.length]}"></span>
+            <span class="status-summary-dot" style="background:${item.color || Theme.chart(index)}"></span>
             <div>
                 <div class="status-summary-count">${item.value}</div>
                 <div class="status-summary-label">${item.label}</div>
@@ -30,5 +28,5 @@ const Metrics = (() => {
         container.innerHTML = row(items);
     }
 
-    return { row, render, PALETTE };
+    return { row, render };
 })();

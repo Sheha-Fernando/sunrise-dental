@@ -1,9 +1,9 @@
 (function () {
     document.addEventListener("shell:ready", init);
 
-    const STATUS_COLORS = { SCHEDULED: "#2A78D6", COMPLETED: "#1BAF7A", CANCELLED: "#EB6834" };
+    const STATUS_COLORS = { SCHEDULED: Theme.chart(0), COMPLETED: Theme.chart(1), CANCELLED: Theme.chart(2) };
     const STATUS_LABELS = { SCHEDULED: "Scheduled", COMPLETED: "Completed", CANCELLED: "Cancelled" };
-    const ACCENT = "#B89552";
+    const ACCENT = Theme.chart(3);
     const RANGE_CAPTIONS = { today: "Today", week: "This week", month: "This month", custom: "Custom range" };
 
     const chartInstances = {};
@@ -151,8 +151,8 @@
         if (report.patientActivity) {
             Metrics.render(document.getElementById("patientActivityContainer"), [
                 { label: "Total Patients", value: report.patientActivity.totalPatients },
-                { label: "New Patients", value: report.patientActivity.newPatients, color: "#1BAF7A" },
-                { label: "Returning Patients", value: report.patientActivity.returningPatients, color: "#1D5D95" },
+                { label: "New Patients", value: report.patientActivity.newPatients, color: Theme.chart(1) },
+                { label: "Returning Patients", value: report.patientActivity.returningPatients, color: Theme.chart(4) },
             ]);
         }
 

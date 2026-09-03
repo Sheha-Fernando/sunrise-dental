@@ -151,7 +151,7 @@
 
             document.getElementById("statCards").innerHTML = Metrics.row([
                 { label: "Today's Bills", value: todaysBills.length },
-                { label: "Today's Revenue", value: Fmt.currency(revenue), color: "#B89552" },
+                { label: "Today's Revenue", value: Fmt.currency(revenue), color: Theme.chart(3) },
             ]);
 
             document.getElementById("billSearch").addEventListener("input", renderBillList);

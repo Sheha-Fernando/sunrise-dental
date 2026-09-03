@@ -24,24 +24,71 @@
             <ol>
                 <li>Enter your username and password on the sign-in page.</li>
                 <li>Click Sign In.</li>
-                <li>Use the sidebar to move between Dashboard, Appointments, Patients, Billing and Help.</li>
+                <li>Use the sidebar to move between pages. The pages you see depend on your role - for
+                    example, only Administrators see Staff, and only Administrators, Front Desk Reception,
+                    Dentists and Billing Staff see Reports.</li>
             </ol>
         </section>
 
         <section class="help-section">
+            <h3>Roles in Sunrise Dental</h3>
+            <p>Every account has exactly one role, set by an Administrator:</p>
+            <ul>
+                <li><strong>Administrator</strong></li>
+                <li><strong>Front Desk Reception</strong></li>
+                <li><strong>Dentist</strong></li>
+                <li><strong>Clinical Assistant</strong> - assigned to one dentist</li>
+                <li><strong>Billing Staff</strong></li>
+            </ul>
+        </section>
+
+        <section class="help-section">
+            <h3>Dashboard</h3>
+            <p>
+                Your Dashboard is tailored to your role. Administrators see a clinic-wide overview
+                (today's appointment status, clinic totals, weekly charts and recent activity).
+                Dentists and Clinical Assistants see only their own (or their assigned dentist's)
+                schedule and treatment breakdown. Billing Staff see today's and this month's revenue,
+                bills generated and pending billing. Front Desk Reception sees the day's schedule and
+                clinic-wide status summary.
+            </p>
+        </section>
+
+        <section class="help-section">
             <h3>Registering a Patient</h3>
+            <p>Available to Administrators and Front Desk Reception.</p>
             <ol>
                 <li>Open Patients from the sidebar.</li>
                 <li>Search first - the patient may already be registered.</li>
                 <li>If they're new, click + Register Patient.</li>
-                <li>Enter the patient's full name, address and contact number.</li>
+                <li>Enter the patient's full name, address and contact number - all three are required.</li>
                 <li>Click Register Patient.</li>
             </ol>
         </section>
 
         <section class="help-section">
+            <h3>Searching and Filtering Patients</h3>
+            <p>
+                Type into the search box on Patients to filter instantly by name, contact number or
+                patient ID (shown as <strong>P-000123</strong>) - it filters the list you already have
+                on screen as you type. You can also filter by dentist, status and last-visit period at
+                the same time.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>Viewing Patient Information</h3>
+            <p>
+                Click any patient row to open their profile: contact details and their full appointment
+                history. A patient's <strong>Assigned Dentist</strong> shown in the list is not a fixed
+                assignment - it is simply the dentist from their most recent appointment, and can change
+                if they see a different dentist next time.
+            </p>
+        </section>
+
+        <section class="help-section">
             <h3>Editing Patient Information</h3>
-            <p>Available to Administrators and Receptionists only.</p>
+            <p>Available to Administrators and Front Desk Reception only - Billing Staff can view patients but not edit them.</p>
             <ol>
                 <li>Open the patient's profile from Patients.</li>
                 <li>Click Edit Patient.</li>
@@ -52,6 +99,7 @@
 
         <section class="help-section">
             <h3>Creating an Appointment</h3>
+            <p>Available to Administrators and Front Desk Reception.</p>
             <ol>
                 <li>Open Appointments and click + New Appointment.</li>
                 <li>Choose New Patient, or search for an Existing Patient by name or contact number.</li>
@@ -60,6 +108,26 @@
                     booked for that dentist. Click any open time to select it.</li>
                 <li>Click Register Appointment.</li>
             </ol>
+        </section>
+
+        <section class="help-section">
+            <h3>Dentist Availability and Time Slots</h3>
+            <p>
+                Every dentist shares the same clinic time slots (30-minute slots, 8:30 AM-11:30 AM and
+                1:30 PM-4:00 PM). A dentist's working days (shown on Staff and Dentist Availability) tell
+                you which days they're normally in - they're for planning, and booking isn't blocked on a
+                day marked as off.
+            </p>
+            <p>
+                Administrators and Front Desk Reception can also open <strong>Dentist Availability</strong>
+                to see, at a glance, which dentists are working today, filter by specialty, and plan around
+                their schedules before booking.
+            </p>
+            <div class="alert alert-info visible">
+                If you see "This dentist is already booked at this date and time", choose a different
+                time or dentist. This check happens on the server and cannot be bypassed, so the
+                schedule can never end up with two appointments for the same dentist at the same time.
+            </div>
         </section>
 
         <section class="help-section">
@@ -74,15 +142,63 @@
         <section class="help-section">
             <h3>Finding an Appointment or Patient</h3>
             <ol>
-                <li>Open Appointments to browse, search by patient name or appointment number, and filter
-                    by date, dentist or status.</li>
+                <li>Open Appointments to browse, filter by date, dentist or status, and search by patient
+                    name or appointment number.</li>
                 <li>Open Patients to search by name, contact number or patient ID.</li>
                 <li>Click any row to open its full details.</li>
             </ol>
         </section>
 
         <section class="help-section">
-            <h3>Generating a Bill</h3>
+            <h3>Rescheduling an Appointment</h3>
+            <p>Available to Administrators and Front Desk Reception.</p>
+            <p>Open the appointment and choose Reschedule to move it to a new date and time. The same
+                double-booking check applies to the new slot.</p>
+        </section>
+
+        <section class="help-section">
+            <h3>Cancelling an Appointment</h3>
+            <p>Available to Administrators and Front Desk Reception.</p>
+            <p>Cancelling asks for a reason, which is kept with the appointment. Once cancelled, that
+                time slot becomes available again for the same dentist.</p>
+        </section>
+
+        <section class="help-section">
+            <h3>Checking In a Patient</h3>
+            <p>
+                Available to Administrators, Front Desk Reception, and Clinical Assistants (for their
+                own assigned dentist's appointments only). Checking in moves an appointment from
+                Scheduled to Checked In once the patient has arrived and is ready to be seen.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>Completing an Appointment</h3>
+            <p>Available to Administrators and Dentists.</p>
+            <p>
+                Marking an appointment Completed records that the visit took place. A bill can then be
+                generated for it from Billing.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>Understanding Appointment Statuses</h3>
+            <p>Every appointment is one of four statuses:</p>
+            <ol>
+                <li><strong>Scheduled</strong> - booked and upcoming.</li>
+                <li><strong>Checked In</strong> - the patient has arrived; not yet seen by the dentist.</li>
+                <li><strong>Completed</strong> - the visit has taken place.</li>
+                <li><strong>Cancelled</strong> - the appointment will not go ahead; the time slot becomes available again for the same dentist.</li>
+            </ol>
+            <p>The normal path is <strong>Scheduled &rarr; Checked In &rarr; Completed</strong>. An
+                appointment can also be marked Completed directly from Scheduled if check-in was skipped,
+                and it can be cancelled from either Scheduled or Checked In. Once an appointment is
+                Completed or Cancelled, its status is final.</p>
+        </section>
+
+        <section class="help-section">
+            <h3>Billing</h3>
+            <p>Available to Administrators, Front Desk Reception and Billing Staff.</p>
             <ol>
                 <li>Open Billing.</li>
                 <li>Enter the appointment number and click Find Appointment.</li>
@@ -90,24 +206,22 @@
                 <li>Review the treatment cost, consultation fee and total.</li>
                 <li>Click Print Receipt.</li>
             </ol>
-        </section>
-
-        <section class="help-section">
-            <h3>Understanding Appointment Status</h3>
-            <p>Every appointment is one of three statuses:</p>
-            <ol>
-                <li><strong>Scheduled</strong> - booked and upcoming.</li>
-                <li><strong>Completed</strong> - the visit has taken place.</li>
-                <li><strong>Cancelled</strong> - the appointment will not go ahead; the time slot becomes available again for the same dentist.</li>
-            </ol>
-        </section>
-
-        <section class="help-section">
-            <h3>If a Dentist Is Already Booked</h3>
             <p>
-                If the system shows "This dentist is already booked at this date and time", choose a
-                different time or a different dentist. This protection cannot be bypassed - it keeps
-                the schedule free of double bookings.
+                The treatment cost comes from that appointment's treatment, and the consultation fee is
+                the clinic's standard consultation price - both are set on the Treatments page. A bill
+                can only be generated once per appointment; if one already exists, use Find Appointment
+                to look it up instead. The printed receipt shows the appointment number, patient, dentist,
+                treatment, date, the itemised fees and the total.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>Managing Treatments and Pricing</h3>
+            <p>Available to Administrators only.</p>
+            <p>
+                Open Treatments to add treatment types and set their price, or update an existing
+                treatment's name, price or active status. These prices are exactly what Billing uses to
+                calculate a bill's treatment cost and consultation fee.
             </p>
         </section>
 
@@ -116,7 +230,9 @@
             <p>
                 Your Dashboard and My Schedule only show your own appointments. My Patients lists
                 patients from your own appointment history. You will not see another dentist's
-                schedule or patients.
+                schedule or patients. You can mark your own appointments Completed, and Reports shows
+                your own performance and revenue - but you cannot cancel, reschedule or check in an
+                appointment yourself.
             </p>
         </section>
 
@@ -125,7 +241,99 @@
             <p>
                 Your Dashboard shows your assigned dentist and their schedule. My Schedule and My
                 Patients are limited to that dentist's appointments only - you will not see another
-                dentist's schedule, patients, or any billing/staff/report information.
+                dentist's schedule, patients, billing, staff or report information. You can check in
+                patients for your assigned dentist, but you cannot create, cancel, reschedule or
+                complete appointments.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>For Front Desk Reception</h3>
+            <p>
+                You handle the front-of-house workflow: registering and editing patients, creating,
+                rescheduling and cancelling appointments, checking patients in, and generating bills.
+                You can also view Reports and Dentist Availability, though Reports does not show revenue
+                figures for your role.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>For Billing Staff</h3>
+            <p>
+                You can view (but not edit) patients and appointments, generate bills and print receipts,
+                and view Reports, including revenue and treatment-revenue figures.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>Staff Management</h3>
+            <p>Available to Administrators only.</p>
+            <p>
+                From Staff you can add a new staff account (Administrator, Front Desk Reception,
+                Dentist, Clinical Assistant or Billing Staff), edit an existing account, change its role,
+                reset its password, or activate/deactivate it. Deactivating a Dentist account also marks
+                that dentist unavailable for new bookings, while keeping their history intact.
+            </p>
+            <ul>
+                <li>A Dentist account requires a specialty and working days.</li>
+                <li>A Clinical Assistant account must be assigned to one active dentist.</li>
+            </ul>
+            <p>
+                The Staff page also shows quick statistics: total and active dentists and their
+                appointments this month on the Doctor Staff tab, and a count of each role on the General
+                Staff tab.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>Reports</h3>
+            <p>Available to Administrators, Front Desk Reception, Dentists and Billing Staff.</p>
+            <p>Choose Today, This Week, This Month, or a Custom date range. Every report always shows a
+                summary and the Scheduled/Completed/Cancelled breakdown for that period. What else you
+                see depends on your role:</p>
+            <ul>
+                <li><strong>Revenue and treatment revenue</strong> - Administrators, Dentists and Billing Staff (not Front Desk Reception).</li>
+                <li><strong>Dentist performance</strong> - Administrators only.</li>
+                <li><strong>Patient activity</strong> (new/returning patients) - Administrators and Front Desk Reception.</li>
+                <li><strong>Daily operational summary</strong> (first/last appointment, remaining today) - Administrators, Front Desk Reception and Dentists, for Today/This Week only.</li>
+            </ul>
+            <p>A Dentist's report only ever covers their own appointments and revenue. Clinical Assistants do not have access to Reports.</p>
+        </section>
+
+        <section class="help-section">
+            <h3>Notifications and Staff Messages</h3>
+            <p>
+                The bell icon in the top bar shows your unread count and opens your notifications panel.
+                Sunrise Dental sends some notifications automatically - when an appointment is created,
+                cancelled, rescheduled or completed, when a patient is checked in, and when a bill is
+                generated - to the staff actually involved (the dentist and their assistant, reception
+                and admin, or billing, depending on the event).
+            </p>
+            <p>
+                Anyone can also click New Message to send a manual note - for example, "Patient running
+                late", "Dentist running late" or "Patient arrived" - to an eligible recipient (who you can
+                message depends on your own role). Clicking a notification marks it read and, where it
+                relates to an appointment or bill, takes you straight to it.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>My Profile</h3>
+            <p>
+                Open My Profile from the top-right menu to see your username, contact number, email and
+                last login, plus role-specific details: a Dentist sees their specialty and working days;
+                a Clinical Assistant sees which dentist they're assisting. Click Edit Profile to update
+                your full name, username, contact number or email - your role and (for a Clinical
+                Assistant) your dentist assignment can only be changed by an Administrator from Staff.
+            </p>
+        </section>
+
+        <section class="help-section">
+            <h3>Changing Your Password</h3>
+            <p>
+                From My Profile, click Change Password and enter your current password plus your new one
+                twice. You must know your current password to change it yourself. (An Administrator can
+                separately reset a staff member's password from Staff if they've forgotten it.)
             </p>
         </section>
 
@@ -133,16 +341,36 @@
             <h3>What Can Each Role Access?</h3>
             <div class="table-wrap">
                 <table class="data-table">
-                    <thead><tr><th>Role</th><th>Can access</th></tr></thead>
+                    <thead><tr>
+                        <th>Function</th><th>Admin</th><th>Front Desk Reception</th><th>Dentist</th><th>Clinical Assistant</th><th>Billing Staff</th>
+                    </tr></thead>
                     <tbody>
-                        <tr><td class="table-primary-text">Administrator</td><td>Everything - appointments, patients, billing, dentists, treatments, staff, reports</td></tr>
-                        <tr><td class="table-primary-text">Receptionist</td><td>Appointments, patients (including registration and editing), billing</td></tr>
-                        <tr><td class="table-primary-text">Dentist</td><td>Their own appointments and patients only</td></tr>
-                        <tr><td class="table-primary-text">Clinical Assistant</td><td>Their assigned dentist's appointments and patients only</td></tr>
-                        <tr><td class="table-primary-text">Billing Staff</td><td>Appointments, patients (view only), billing, reports</td></tr>
+                        <tr><td class="table-primary-text">Dashboard</td><td>Yes</td><td>Yes</td><td>Yes (own)</td><td>Yes (assigned dentist)</td><td>Yes</td></tr>
+                        <tr><td class="table-primary-text">View appointments/patients</td><td>Yes</td><td>Yes</td><td>Own only</td><td>Assigned dentist only</td><td>Yes (view only)</td></tr>
+                        <tr><td class="table-primary-text">Register/edit patients</td><td>Yes</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr>
+                        <tr><td class="table-primary-text">Create/reschedule/cancel appointment</td><td>Yes</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr>
+                        <tr><td class="table-primary-text">Check in patient</td><td>Yes</td><td>Yes</td><td>No</td><td>Yes (assigned dentist only)</td><td>No</td></tr>
+                        <tr><td class="table-primary-text">Complete appointment</td><td>Yes</td><td>No</td><td>Yes (own only)</td><td>No</td><td>No</td></tr>
+                        <tr><td class="table-primary-text">Generate bill / print receipt</td><td>Yes</td><td>Yes</td><td>No</td><td>No</td><td>Yes</td></tr>
+                        <tr><td class="table-primary-text">Manage treatments &amp; pricing</td><td>Yes</td><td>No</td><td>No</td><td>No</td><td>No</td></tr>
+                        <tr><td class="table-primary-text">Staff management</td><td>Yes</td><td>No</td><td>No</td><td>No</td><td>No</td></tr>
+                        <tr><td class="table-primary-text">Reports</td><td>Yes</td><td>Yes (no revenue)</td><td>Yes (own only)</td><td>No</td><td>Yes</td></tr>
+                        <tr><td class="table-primary-text">Notifications &amp; messages</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
                     </tbody>
                 </table>
             </div>
+        </section>
+
+        <section class="help-section">
+            <h3>Security</h3>
+            <ul>
+                <li>You must log in to use Sunrise Dental - every page and every action is checked against your logged-in session.</li>
+                <li>What you can see and do is enforced by the server according to your role, every time - not just hidden in the menu. Changing a web address by hand cannot unlock another role's pages or another person's data.</li>
+                <li>A Dentist's or Clinical Assistant's data is scoped to their own (or assigned) dentist on the server itself.</li>
+                <li>Passwords are never stored as plain text.</li>
+                <li>Your session ends automatically after a period of inactivity, and a fresh login always starts a new, secure session.</li>
+                <li>Always sign out when you're done, especially on a shared computer.</li>
+            </ul>
         </section>
 
         <section class="help-section">
