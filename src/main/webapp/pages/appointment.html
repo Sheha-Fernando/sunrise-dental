@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Appointment - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+    <div class="brand">
+        <span class="brand-name">SUNRISE DENTAL</span>
+        <span class="brand-tagline">Clinic Management System</span>
+    </div>
+    <div class="staff-info">
+        <span>Staff: <strong id="staffName">...</strong></span>
+        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
+    </div>
+</header>
+
+<main class="page-container">
+    <div class="page-header">
+        <a class="back-link" href="dashboard.html">&larr; Back to Dashboard</a>
+        <h1>New Appointment</h1>
+        <p>Register a new patient visit.</p>
+    </div>
+
+    <div id="formAlert" class="alert alert-error" role="alert"></div>
+
+    <form id="appointmentForm" novalidate>
+        <div class="card">
+            <h2 class="section-title">Patient Information</h2>
+
+            <div class="form-group">
+                <label for="patientName">Patient Name <span aria-hidden="true">*</span></label>
+                <input type="text" id="patientName" name="patientName" required>
+                <p class="field-error" id="patientNameError">Patient name is required.</p>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="contactNumber">Contact Number <span aria-hidden="true">*</span></label>
+                    <input type="tel" id="contactNumber" name="contactNumber" required>
+                    <p class="field-error" id="contactNumberError">Contact number is required.</p>
+                </div>
+                <div class="form-group">
+                    <label for="address">Address <span aria-hidden="true">*</span></label>
+                    <input type="text" id="address" name="address" required>
+                    <p class="field-error" id="addressError">Address is required.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Appointment Details</h2>
+
+            <div class="form-group">
+                <label for="appointmentNumber">Appointment Number <span aria-hidden="true">*</span></label>
+                <input type="text" id="appointmentNumber" name="appointmentNumber" maxlength="20" required>
+                <p class="field-error" id="appointmentNumberError">Appointment number is required.</p>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="dentistId">Dentist <span aria-hidden="true">*</span></label>
+                    <select id="dentistId" name="dentistId" required>
+                        <option value="">Loading dentists...</option>
+                    </select>
+                    <p class="field-error" id="dentistIdError">Please select a dentist.</p>
+                </div>
+                <div class="form-group">
+                    <label for="treatmentId">Treatment <span aria-hidden="true">*</span></label>
+                    <select id="treatmentId" name="treatmentId" required>
+                        <option value="">Loading treatments...</option>
+                    </select>
+                    <p class="field-error" id="treatmentIdError">Please select a treatment.</p>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="appointmentDate">Date <span aria-hidden="true">*</span></label>
+                    <input type="date" id="appointmentDate" name="appointmentDate" required>
+                    <p class="field-error" id="appointmentDateError">Please select an appointment date.</p>
+                </div>
+                <div class="form-group">
+                    <label for="appointmentTime">Time <span aria-hidden="true">*</span></label>
+                    <input type="time" id="appointmentTime" name="appointmentTime" required>
+                    <p class="field-error" id="appointmentTimeError">Please select an appointment time.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" id="submitButton">Register Appointment</button>
+        </div>
+    </form>
+
+    <div id="successPanel" class="card" style="display:none;">
+        <h2>&#10003; Appointment Registered Successfully</h2>
+        <div class="detail-grid" style="margin-top:1rem;">
+            <div class="detail-item">
+                <div class="detail-label">Appointment Number</div>
+                <div class="detail-value" id="resultNumber"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Patient</div>
+                <div class="detail-value" id="resultPatient"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Dentist</div>
+                <div class="detail-value" id="resultDentist"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Date</div>
+                <div class="detail-value" id="resultDate"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Time</div>
+                <div class="detail-value" id="resultTime"></div>
+            </div>
+        </div>
+        <div class="btn-row">
+            <button type="button" class="btn btn-secondary" id="registerAnotherBtn">Register Another</button>
+            <button type="button" class="btn btn-primary" id="viewAppointmentBtn">View Appointment</button>
+        </div>
+    </div>
+</main>
+
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/guard.js"></script>
+<script src="../js/appointment.js"></script>
+</body>
+</html>

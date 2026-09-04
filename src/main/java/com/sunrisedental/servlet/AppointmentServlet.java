@@ -47,9 +47,8 @@ public class AppointmentServlet extends HttpServlet {
             int treatmentId = parseInt(req.getParameter("treatmentId"), "Treatment is required.");
             LocalDate date = parseDate(req.getParameter("appointmentDate"));
             LocalTime time = parseTime(req.getParameter("appointmentTime"));
-            String createdByParam = req.getParameter("createdBy");
-            Integer createdBy = (createdByParam == null || createdByParam.isBlank())
-                    ? null : Integer.valueOf(createdByParam);
+            jakarta.servlet.http.HttpSession session = req.getSession(false);
+            Integer createdBy = (session != null) ? (Integer) session.getAttribute("userId") : null;
 
             NewAppointmentRequest request = new NewAppointmentRequest(
                     appointmentNumber, patientId, patientName, address, contactNumber,

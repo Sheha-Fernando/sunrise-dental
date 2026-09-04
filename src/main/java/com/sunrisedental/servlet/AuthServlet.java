@@ -9,6 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -31,6 +32,12 @@ public class AuthServlet extends HttpServlet {
 
         try {
             User user = authService.authenticate(username, password);
+
+            HttpSession session = req.getSession(true);
+            session.setAttribute("userId", user.getUserId());
+            session.setAttribute("username", user.getUsername());
+            session.setAttribute("fullName", user.getFullName());
+
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");
             body.put("message", "Login successful.");

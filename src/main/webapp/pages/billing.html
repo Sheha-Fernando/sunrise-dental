@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/print.css">
+</head>
+<body>
+
+<header class="app-header no-print">
+    <div class="brand">
+        <span class="brand-name">SUNRISE DENTAL</span>
+        <span class="brand-tagline">Clinic Management System</span>
+    </div>
+    <div class="staff-info">
+        <span>Staff: <strong id="staffName">...</strong></span>
+        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
+    </div>
+</header>
+
+<main class="page-container narrow">
+    <div class="page-header no-print">
+        <a class="back-link" href="dashboard.html">&larr; Back to Dashboard</a>
+        <h1>Billing</h1>
+        <p>Generate and print a patient bill.</p>
+    </div>
+
+    <div class="card no-print" id="lookupCard">
+        <form id="lookupForm" novalidate>
+            <div class="form-group">
+                <label for="appointmentNumber">Appointment Number</label>
+                <input type="text" id="appointmentNumber" name="appointmentNumber" required>
+                <p class="field-error" id="appointmentNumberError">Appointment number is required.</p>
+            </div>
+            <button type="submit" class="btn btn-primary" id="lookupButton">Find Appointment</button>
+        </form>
+    </div>
+
+    <div id="billingAlert" class="alert alert-error no-print" role="alert"></div>
+
+    <div id="appointmentSummary" class="card no-print" style="display:none;">
+        <h2 class="section-title">Appointment</h2>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Patient</div>
+                <div class="detail-value" id="summaryPatient"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Dentist</div>
+                <div class="detail-value" id="summaryDentist"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Treatment</div>
+                <div class="detail-value" id="summaryTreatment"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Status</div>
+                <div class="detail-value" id="summaryStatus"></div>
+            </div>
+        </div>
+        <div class="btn-row">
+            <button type="button" class="btn btn-primary" id="generateBillBtn">Generate Bill</button>
+        </div>
+    </div>
+
+    <div id="receiptCard" class="card" style="display:none;">
+        <div class="receipt">
+            <div class="receipt-header">
+                <div class="clinic-name">SUNRISE DENTAL CLINIC</div>
+                <div>Patient Bill</div>
+            </div>
+
+            <div class="receipt-line"><span>Appointment No.</span><strong id="billNumber"></strong></div>
+            <div class="receipt-line"><span>Patient</span><strong id="billPatient"></strong></div>
+            <div class="receipt-line"><span>Dentist</span><strong id="billDentist"></strong></div>
+            <div class="receipt-line"><span>Treatment</span><strong id="billTreatment"></strong></div>
+            <div class="receipt-line"><span>Bill Date</span><strong id="billDate"></strong></div>
+
+            <hr class="receipt-divider">
+
+            <div class="receipt-line"><span>Consultation Fee</span><span id="billConsultation"></span></div>
+            <div class="receipt-line"><span>Treatment Cost</span><span id="billTreatmentCost"></span></div>
+
+            <hr class="receipt-divider">
+
+            <div class="receipt-total"><span>TOTAL</span><span id="billTotal"></span></div>
+
+            <div class="receipt-footer">Thank you for choosing Sunrise Dental Clinic.</div>
+        </div>
+
+        <div class="btn-row no-print">
+            <a href="dashboard.html" class="btn btn-secondary">Back</a>
+            <button type="button" class="btn btn-primary" id="printBillBtn">Print Bill</button>
+        </div>
+    </div>
+</main>
+
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/guard.js"></script>
+<script src="../js/billing.js"></script>
+</body>
+</html>
