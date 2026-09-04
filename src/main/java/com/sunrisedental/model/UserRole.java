@@ -6,11 +6,12 @@ public enum UserRole {
     ADMIN,
     RECEPTIONIST,
     DENTIST,
-    BILLING;
+    BILLING,
+    CLINICAL_ASSISTANT;
 
     /**
      * Parses a client-supplied role value. Never accepts anything outside
-     * the four known roles - rejects made-up values like "SUPER_ADMIN".
+     * the known roles - rejects made-up values like "SUPER_ADMIN".
      */
     public static UserRole fromString(String value) {
         if (value == null || value.isBlank()) {

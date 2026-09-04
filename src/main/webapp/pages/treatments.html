@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treatments - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<script>window.PAGE_ROLES = ["ADMIN", "RECEPTIONIST", "DENTIST", "BILLING", "CLINICAL_ASSISTANT"];</script>
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1>Treatments</h1>
+            <p class="page-subtitle">Manage treatment services and pricing.</p>
+        </div>
+        <div class="page-header-actions" id="headerActions"></div>
+    </div>
+    <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading treatments...</div></div>
+</template>
+
+<div class="modal-overlay" id="treatmentModalOverlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="treatmentModalTitle">
+        <button type="button" class="modal-close" id="closeTreatmentModal" aria-label="Close">&times;</button>
+        <h2 id="treatmentModalTitle">Add Treatment</h2>
+        <div id="treatmentAlert" class="alert alert-error" role="alert"></div>
+        <form id="treatmentForm" novalidate>
+            <div class="form-group">
+                <label for="treatmentName">Treatment Name <span aria-hidden="true">*</span></label>
+                <input type="text" id="treatmentName" placeholder="e.g. Dental X-Ray" required>
+                <p class="field-error" id="treatmentNameError">Treatment name is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="treatmentCost">Treatment Price <span aria-hidden="true">*</span></label>
+                <input type="text" id="treatmentCost" placeholder="e.g. 2,500.00" required>
+                <p class="field-error" id="treatmentCostError">Please enter a valid treatment price.</p>
+            </div>
+            <div class="form-group" id="treatmentStatusGroup" style="display:none;">
+                <label for="treatmentStatus">Status</label>
+                <select id="treatmentStatus">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+            </div>
+            <p id="treatmentAddNote" style="display:none; font-size:0.83rem; color:var(--color-text-muted); margin:-0.5rem 0 1rem;">
+                New treatments are active by default.
+            </p>
+            <div class="btn-row">
+                <button type="button" class="btn btn-secondary" id="cancelTreatmentBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="treatmentSubmitBtn">Add Treatment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deactivateModalOverlay">
+    <div class="modal" style="max-width:420px;" role="dialog" aria-modal="true" aria-labelledby="deactivateModalTitle">
+        <h2 id="deactivateModalTitle">Deactivate Treatment?</h2>
+        <p id="deactivateModalMessage" style="color:var(--color-text-muted);"></p>
+        <div class="btn-row">
+            <button type="button" class="btn btn-secondary" id="cancelDeactivateBtn">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeactivateBtn">Deactivate</button>
+        </div>
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/treatments.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patients - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="appShell"></div>
+
+<template id="listTemplate">
+    <div class="page-header">
+        <div>
+            <h1 id="pageTitle">Patients</h1>
+            <p class="page-subtitle">Search the patient directory or register a new patient.</p>
+        </div>
+        <div class="page-header-actions" id="headerActions"></div>
+    </div>
+
+    <div class="card" id="patientStats" style="margin-bottom:1.25rem;">
+        <div id="patientStatsRow" class="status-summary-row"></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="toolbar-search">
+            <svg class="toolbar-search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="9" cy="9" r="6.25" stroke="currentColor" stroke-width="1.6"/>
+                <line x1="13.6" y1="13.6" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <input type="search" id="filterSearch" placeholder="Search by name, contact number or patient ID...">
+        </div>
+        <select id="filterDentist" style="display:none;">
+            <option value="">All dentists</option>
+        </select>
+        <select id="filterStatus">
+            <option value="">All statuses</option>
+            <option value="UPCOMING">Upcoming</option>
+            <option value="NEW">New</option>
+            <option value="ACTIVE">Active</option>
+        </select>
+        <select id="filterLastVisit">
+            <option value="">Last Visit: All</option>
+            <option value="WEEK">This Week</option>
+            <option value="MONTH">This Month</option>
+            <option value="YEAR">This Year</option>
+        </select>
+        <button type="button" class="btn btn-secondary btn-sm" id="clearFiltersBtn">Clear Filters</button>
+    </div>
+
+    <div id="listContainer"><div class="loading-inline"><span class="spinner"></span> Loading patients...</div></div>
+</template>
+
+<template id="profileTemplate">
+    <div class="page-header">
+        <div>
+            <a class="back-link" href="patients.html">&larr; Back to Patients</a>
+            <h1 id="profileName">Patient</h1>
+            <p class="page-subtitle" id="profileMeta"></p>
+        </div>
+        <div class="page-header-actions" id="profileActions"></div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Contact Information</h2>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Contact Number</div>
+                <div class="detail-value" id="profileContact"></div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Status</div>
+                <div class="detail-value"><span class="badge badge-active">Active</span></div>
+            </div>
+            <div class="detail-item" style="grid-column: 1 / -1;">
+                <div class="detail-label">Address</div>
+                <div class="detail-value" id="profileAddress"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem;">
+        <h2 class="section-title">Appointment History</h2>
+        <div id="historyContainer"></div>
+    </div>
+</template>
+
+<div class="modal-overlay" id="registerModalOverlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle">
+        <button type="button" class="modal-close" id="closeRegisterModal" aria-label="Close">&times;</button>
+        <h2 id="registerModalTitle">Register New Patient</h2>
+        <div id="registerAlert" class="alert alert-error" role="alert"></div>
+        <form id="registerForm" novalidate>
+            <div class="form-group">
+                <label for="regPatientName">Full Name <span aria-hidden="true">*</span></label>
+                <input type="text" id="regPatientName" required>
+                <p class="field-error" id="regPatientNameError">Patient name is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="regAddress">Address <span aria-hidden="true">*</span></label>
+                <input type="text" id="regAddress" required>
+                <p class="field-error" id="regAddressError">Address is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="regContact">Contact Number <span aria-hidden="true">*</span></label>
+                <input type="tel" id="regContact" required>
+                <p class="field-error" id="regContactError">Contact number is required.</p>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn btn-secondary" id="cancelRegisterBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="registerSubmitBtn">Register Patient</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="editModalOverlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+        <button type="button" class="modal-close" id="closeEditModal" aria-label="Close">&times;</button>
+        <h2 id="editModalTitle">Edit Patient</h2>
+        <div id="editAlert" class="alert alert-error" role="alert"></div>
+        <form id="editForm" novalidate>
+            <div class="form-group">
+                <label for="editPatientName">Full Name <span aria-hidden="true">*</span></label>
+                <input type="text" id="editPatientName" required>
+                <p class="field-error" id="editPatientNameError">Patient name is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="editAddress">Address <span aria-hidden="true">*</span></label>
+                <input type="text" id="editAddress" required>
+                <p class="field-error" id="editAddressError">Address is required.</p>
+            </div>
+            <div class="form-group">
+                <label for="editContact">Contact Number <span aria-hidden="true">*</span></label>
+                <input type="tel" id="editContact" required>
+                <p class="field-error" id="editContactError">Please enter a valid contact number.</p>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="editSubmitBtn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/theme.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/metrics.js"></script>
+<script src="../js/patients.js"></script>
+</body>
+</html>

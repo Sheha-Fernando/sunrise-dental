@@ -1,58 +1,167 @@
 /* Sunrise Dental - login page layout (uses tokens from style.css) */
 
 .login-shell {
-    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+}
+
+.login-visual {
+    flex: 0 0 45%;
+    background: var(--color-text) url("../images/Login-Page.jpg") center / cover no-repeat;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-visual::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg, rgba(184, 149, 82, 0.16), transparent 55%),
+        rgba(20, 21, 19, 0.58),
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 26px);
+}
+
+.login-form-side {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
-    background: linear-gradient(180deg, var(--color-primary-light) 0%, var(--color-bg) 45%);
+    padding: 2rem;
+    background: var(--color-bg);
 }
 
 .login-card {
     width: 100%;
-    max-width: 380px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 2.25rem 2rem;
+    max-width: 460px;
 }
 
 .login-brand {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    padding-bottom: 1.75rem;
     margin-bottom: 1.75rem;
+    border-bottom: 1px solid var(--color-border);
 }
 
-.login-brand .brand-mark {
-    display: inline-flex;
+.login-brand .visual-mark {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    border: 1px solid rgba(184, 149, 82, 0.6);
+    border-radius: 50%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--color-primary-light);
-    color: var(--color-primary-dark);
-    font-size: 1.4rem;
-    margin-bottom: 0.75rem;
+    color: var(--color-accent);
 }
 
-.login-brand .brand-name {
-    font-size: 1.3rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    color: var(--color-primary-dark);
+.login-brand .visual-mark svg {
+    width: 28px;
+    height: 28px;
 }
 
-.login-brand .brand-tagline {
-    font-size: 0.88rem;
+.login-brand h1 {
+    color: var(--color-text);
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.2rem;
+}
+
+.login-tagline {
     color: var(--color-text-muted);
-    margin-top: 0.15rem;
+    font-size: 1rem;
+}
+
+.login-card h2 {
+    font-size: 1.7rem;
+}
+
+.login-card .login-subtitle {
+    color: var(--color-text-muted);
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
+}
+
+.login-card .form-group {
+    margin-bottom: 1.3rem;
+}
+
+.login-card label {
+    font-size: 0.95rem;
+}
+
+.login-card input[type="text"],
+.login-card input[type="password"] {
+    background: var(--color-info-bg);
+    border-color: var(--color-info-border);
+    font-size: 1.05rem;
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+    padding-left: 1rem;
+}
+
+.login-card .password-field input {
+    padding-right: 3.2rem;
+}
+
+.login-card .password-toggle {
+    font-size: 0.88rem;
+}
+
+.login-card .btn {
+    font-size: 1.05rem;
+    padding: 0.85rem 1.1rem;
 }
 
 .login-footer-note {
     text-align: center;
-    margin-top: 1.5rem;
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
+    margin-top: 1.1rem;
+    font-size: 0.9rem;
+    color: var(--color-text-faint);
+}
+
+.login-footer-note:first-of-type {
+    margin-top: 1.85rem;
+}
+
+.login-footer-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--color-text-faint);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.login-footer-link:hover,
+.login-footer-link:focus-visible {
+    color: var(--color-accent-dark);
+}
+
+@media (max-width: 960px) {
+    .login-visual {
+        flex: 0 0 38%;
+    }
+}
+
+@media (max-width: 640px) {
+    .login-shell {
+        flex-direction: column;
+        min-height: 100vh;
+        height: auto;
+    }
+
+    .login-visual {
+        display: none;
+    }
+
+    .login-form-side {
+        flex: 1;
+        background: var(--color-surface);
+        padding: 1.75rem 1.25rem;
+    }
 }

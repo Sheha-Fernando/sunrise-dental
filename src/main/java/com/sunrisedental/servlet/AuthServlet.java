@@ -47,6 +47,7 @@ public class AuthServlet extends HttpServlet {
             session.setAttribute("fullName", user.getFullName());
             session.setAttribute("role", user.getRole());
             session.setAttribute("dentistId", user.getDentistId());
+            session.setAttribute("assignedDentistId", user.getAssignedDentistId());
 
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");
@@ -56,6 +57,7 @@ public class AuthServlet extends HttpServlet {
             body.put("fullName", user.getFullName());
             body.put("role", user.getRole().name());
             body.put("dentistId", user.getDentistId());
+            body.put("assignedDentistId", user.getAssignedDentistId());
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(JsonUtil.write(body));
         } catch (BusinessException e) {

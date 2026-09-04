@@ -62,6 +62,31 @@ public final class AuthorizationUtil {
         return value instanceof Integer ? (Integer) value : null;
     }
 
+    public static Integer currentAssignedDentistId(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        if (session == null) {
+            return null;
+        }
+        Object value = session.getAttribute("assignedDentistId");
+        return value instanceof Integer ? (Integer) value : null;
+    }
+
+    /**
+     * Resolves the dentist a DENTIST or CLINICAL_ASSISTANT session is scoped
+     * to (their own dentist_id, or their assigned_dentist_id respectively) -
+     * null for every other role, or for a scoped role with no session data.
+     */
+    public static Integer currentScopeDentistId(HttpServletRequest req) {
+        UserRole role = currentRole(req);
+        if (role == UserRole.DENTIST) {
+            return currentDentistId(req);
+        }
+        if (role == UserRole.CLINICAL_ASSISTANT) {
+            return currentAssignedDentistId(req);
+        }
+        return null;
+    }
+
     public static void requireAnyRole(HttpServletRequest req, UserRole... allowed) {
         requireAnyRole(currentRole(req), allowed);
     }

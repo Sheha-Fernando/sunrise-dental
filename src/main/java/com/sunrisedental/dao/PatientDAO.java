@@ -2,16 +2,162 @@ package com.sunrisedental.dao;
 
 import com.sunrisedental.db.DatabaseConfig;
 import com.sunrisedental.model.Patient;
+import com.sunrisedental.model.PatientSummary;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class PatientDAO {
+
+    /**
+     * Patients list screen: name/contact search, plus the dentist and date
+     * of the patient's most recent non-cancelled visit ("assigned dentist" /
+     * "last visit" - there is no dedicated dentist assignment column, since
+     * a patient can see several dentists over time), and their nearest
+     * upcoming scheduled appointment ("next appointment"), if any.
+     * search may be null/blank for "all".
+     */
+    public List<PatientSummary> findAllSummaries(String search) throws SQLException {
+        String sql = "SELECT p.patient_id, p.patient_name, p.contact_number, p.created_at, "
+                + "       lv.appointment_date AS last_visit_date, lv.dentist_name AS last_visit_dentist, "
+                + "       na.appointment_date AS next_appointment_date, na.appointment_time AS next_appointment_time, "
+                + "       EXISTS(SELECT 1 FROM appointments c WHERE c.patient_id = p.patient_id "
+                + "              AND c.status = 'COMPLETED') AS has_completed "
+                + "FROM patients p "
+                + "LEFT JOIN ("
+                + "    SELECT x.patient_id, x.appointment_date, x.dentist_name FROM ("
+                + "        SELECT a.patient_id, a.appointment_date, d.dentist_name, "
+                + "               ROW_NUMBER() OVER (PARTITION BY a.patient_id "
+                + "                   ORDER BY a.appointment_date DESC, a.appointment_time DESC) AS rn "
+                + "        FROM appointments a JOIN dentists d ON a.dentist_id = d.dentist_id "
+                + "        WHERE a.status <> 'CANCELLED'"
+                + "    ) x WHERE x.rn = 1"
+                + ") lv ON lv.patient_id = p.patient_id "
+                + "LEFT JOIN ("
+                + "    SELECT y.patient_id, y.appointment_date, y.appointment_time FROM ("
+                + "        SELECT a.patient_id, a.appointment_date, a.appointment_time, "
+                + "               ROW_NUMBER() OVER (PARTITION BY a.patient_id "
+                + "                   ORDER BY a.appointment_date ASC, a.appointment_time ASC) AS rn "
+                + "        FROM appointments a "
+                + "        WHERE a.status = 'SCHEDULED' "
+                + "          AND TIMESTAMP(a.appointment_date, a.appointment_time) >= NOW()"
+                + "    ) y WHERE y.rn = 1"
+                + ") na ON na.patient_id = p.patient_id "
+                + (search != null && !search.isBlank()
+                        ? "WHERE p.patient_name LIKE ? OR p.contact_number LIKE ? OR p.patient_id = ? "
+                        : "")
+                + "ORDER BY p.patient_name";
+
+        List<PatientSummary> summaries = new ArrayList<>();
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (search != null && !search.isBlank()) {
+                String trimmed = search.trim();
+                String like = "%" + trimmed + "%";
+                ps.setString(1, like);
+                ps.setString(2, like);
+                // A non-numeric search should never match patient_id = ? (which would
+                // otherwise throw); -1 is a safe sentinel no real patient_id can equal.
+                int idCandidate = -1;
+                if (trimmed.matches("\\d+")) {
+                    try {
+                        idCandidate = Integer.parseInt(trimmed);
+                    } catch (NumberFormatException ignored) {
+                        // trimmed matched \d+ so this can't actually happen; keep -1.
+                    }
+                }
+                ps.setInt(3, idCandidate);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PatientSummary summary = new PatientSummary();
+                    summary.setPatientId(rs.getInt("patient_id"));
+                    summary.setPatientName(rs.getString("patient_name"));
+                    summary.setContactNumber(rs.getString("contact_number"));
+                    summary.setAssignedDentistName(rs.getString("last_visit_dentist"));
+                    Date lastVisit = rs.getDate("last_visit_date");
+                    summary.setLastVisitDate(lastVisit != null ? lastVisit.toLocalDate() : null);
+                    Date nextDate = rs.getDate("next_appointment_date");
+                    summary.setNextAppointmentDate(nextDate != null ? nextDate.toLocalDate() : null);
+                    Time nextTime = rs.getTime("next_appointment_time");
+                    summary.setNextAppointmentTime(nextTime != null ? nextTime.toLocalTime() : null);
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    summary.setRegisteredDate(createdAt != null ? createdAt.toLocalDateTime().toLocalDate() : null);
+
+                    // Priority: Upcoming (future SCHEDULED appointment) -> New (no
+                    // completed visit history yet) -> Active (has visit history,
+                    // nothing currently scheduled). Computed here, once, so the
+                    // frontend list and the Status filter can never disagree.
+                    boolean hasCompleted = rs.getBoolean("has_completed");
+                    if (summary.getNextAppointmentDate() != null) {
+                        summary.setStatus("UPCOMING");
+                    } else if (!hasCompleted) {
+                        summary.setStatus("NEW");
+                    } else {
+                        summary.setStatus("ACTIVE");
+                    }
+                    summaries.add(summary);
+                }
+            }
+        }
+        return summaries;
+    }
+
+    /** Total registered patients, regardless of appointment history - for report summaries. */
+    public int countTotal() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM patients";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            rs.next();
+            return rs.getInt(1);
+        }
+    }
+
+    /** Patients registered within an inclusive date range - "new patients" for a report period. */
+    public int countNewInRange(java.time.LocalDate from, java.time.LocalDate to) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM patients WHERE DATE(created_at) BETWEEN ? AND ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, Date.valueOf(from));
+            ps.setObject(2, Date.valueOf(to));
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    /**
+     * Distinct patients who had an appointment within the range and also had
+     * an earlier appointment before the range started - "returning patients"
+     * for a report period, as opposed to a patient seen for the first time.
+     */
+    public int countReturningInRange(java.time.LocalDate from, java.time.LocalDate to) throws SQLException {
+        String sql = "SELECT COUNT(DISTINCT a1.patient_id) FROM appointments a1 "
+                + "WHERE a1.appointment_date BETWEEN ? AND ? "
+                + "AND EXISTS (SELECT 1 FROM appointments a2 "
+                + "            WHERE a2.patient_id = a1.patient_id AND a2.appointment_date < ?)";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, Date.valueOf(from));
+            ps.setObject(2, Date.valueOf(to));
+            ps.setObject(3, Date.valueOf(from));
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
 
     public int create(Patient patient) throws SQLException {
         try (Connection conn = DatabaseConfig.getConnection()) {
@@ -34,6 +180,24 @@ public class PatientDAO {
                 }
                 throw new SQLException("Failed to obtain generated patient_id");
             }
+        }
+    }
+
+    public void update(int patientId, String patientName, String address, String contactNumber) throws SQLException {
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            update(conn, patientId, patientName, address, contactNumber);
+        }
+    }
+
+    public void update(Connection conn, int patientId, String patientName, String address, String contactNumber)
+            throws SQLException {
+        String sql = "UPDATE patients SET patient_name = ?, address = ?, contact_number = ? WHERE patient_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, patientName);
+            ps.setString(2, address);
+            ps.setString(3, contactNumber);
+            ps.setInt(4, patientId);
+            ps.executeUpdate();
         }
     }
 

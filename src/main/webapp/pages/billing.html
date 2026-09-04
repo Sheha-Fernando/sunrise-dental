@@ -9,67 +9,63 @@
 </head>
 <body>
 
-<header class="app-header no-print">
-    <div class="brand">
-        <span class="brand-name">SUNRISE DENTAL</span>
-        <span class="brand-tagline">Clinic Management System</span>
-    </div>
-    <div class="staff-info">
-        <span>Staff: <strong id="staffName">...</strong></span>
-        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
-    </div>
-</header>
+<script>window.PAGE_ROLES = ["ADMIN", "RECEPTIONIST", "BILLING"];</script>
+<div id="appShell"></div>
 
-<main class="page-container narrow">
+<template id="pageTemplate">
     <div class="page-header no-print">
-        <a class="back-link" href="dashboard.html">&larr; Back to Dashboard</a>
-        <h1>Billing</h1>
-        <p>Generate and print a patient bill.</p>
+        <div>
+            <h1>Billing</h1>
+            <p class="page-subtitle">Generate and print a patient bill.</p>
+        </div>
+    </div>
+
+    <div class="card no-print" id="statCardsCard" style="margin-bottom:1.25rem;">
+        <div id="statCards" class="status-summary-row compact"></div>
     </div>
 
     <div class="card no-print" id="lookupCard">
+        <h2 class="section-title">Find Appointment</h2>
         <form id="lookupForm" novalidate>
             <div class="form-group">
                 <label for="appointmentNumber">Appointment Number</label>
-                <input type="text" id="appointmentNumber" name="appointmentNumber" required>
+                <div class="inline-search-row">
+                    <input type="text" id="appointmentNumber" name="appointmentNumber" placeholder="e.g. APT-0234" required>
+                    <button type="submit" class="btn btn-primary" id="lookupButton">
+                        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <circle cx="9" cy="9" r="6.5"></circle>
+                            <line x1="18" y1="18" x2="13.7" y2="13.7"></line>
+                        </svg>
+                        Find Appointment
+                    </button>
+                </div>
                 <p class="field-error" id="appointmentNumberError">Appointment number is required.</p>
             </div>
-            <button type="submit" class="btn btn-primary" id="lookupButton">Find Appointment</button>
         </form>
     </div>
 
     <div id="billingAlert" class="alert alert-error no-print" role="alert"></div>
 
     <div id="appointmentSummary" class="card no-print" style="display:none;">
-        <h2 class="section-title">Appointment</h2>
-        <div class="detail-grid">
-            <div class="detail-item">
-                <div class="detail-label">Patient</div>
-                <div class="detail-value" id="summaryPatient"></div>
+        <div class="schedule-row static">
+            <div class="schedule-main">
+                <div class="schedule-patient" id="summaryPatientLine"></div>
+                <div class="schedule-meta" id="summaryMetaLine"></div>
             </div>
-            <div class="detail-item">
-                <div class="detail-label">Dentist</div>
-                <div class="detail-value" id="summaryDentist"></div>
-            </div>
-            <div class="detail-item">
-                <div class="detail-label">Treatment</div>
-                <div class="detail-value" id="summaryTreatment"></div>
-            </div>
-            <div class="detail-item">
-                <div class="detail-label">Status</div>
-                <div class="detail-value" id="summaryStatus"></div>
-            </div>
+            <div id="summaryRight"></div>
         </div>
-        <div class="btn-row">
+        <div class="btn-row" style="margin-top:1rem;">
             <button type="button" class="btn btn-primary" id="generateBillBtn">Generate Bill</button>
+            <button type="button" class="btn btn-primary" id="printBillBtn" style="display:none;">Print Bill</button>
         </div>
     </div>
 
-    <div id="receiptCard" class="card" style="display:none;">
+    <div id="receiptCard" class="card print-only">
         <div class="receipt">
             <div class="receipt-header">
                 <div class="clinic-name">SUNRISE DENTAL CLINIC</div>
-                <div>Patient Bill</div>
+                <div class="clinic-location">Colombo, Sri Lanka</div>
+                <div style="margin-top:0.5rem;">Receipt</div>
             </div>
 
             <div class="receipt-line"><span>Appointment No.</span><strong id="billNumber"></strong></div>
@@ -80,8 +76,8 @@
 
             <hr class="receipt-divider">
 
-            <div class="receipt-line"><span>Consultation Fee</span><span id="billConsultation"></span></div>
             <div class="receipt-line"><span>Treatment Cost</span><span id="billTreatmentCost"></span></div>
+            <div class="receipt-line"><span>Consultation Fee</span><span id="billConsultation"></span></div>
 
             <hr class="receipt-divider">
 
@@ -89,17 +85,29 @@
 
             <div class="receipt-footer">Thank you for choosing Sunrise Dental Clinic.</div>
         </div>
-
-        <div class="btn-row no-print">
-            <a href="dashboard.html" class="btn btn-secondary">Back</a>
-            <button type="button" class="btn btn-primary" id="printBillBtn">Print Bill</button>
-        </div>
     </div>
-</main>
+
+    <div class="card no-print" id="recentBillsCard" style="margin-top:1.25rem;">
+        <div class="section-title-row">
+            <h2 class="section-title">Recent Bills</h2>
+            <div class="section-title-search">
+                <svg class="toolbar-search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <circle cx="9" cy="9" r="6.25" stroke="currentColor" stroke-width="1.6"/>
+                    <line x1="13.6" y1="13.6" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+                <input type="search" id="billSearch" placeholder="Search by patient name or appointment number...">
+            </div>
+        </div>
+        <div id="recentBillsContainer"><div class="loading-inline"><span class="spinner"></span> Loading...</div></div>
+    </div>
+</template>
 
 <script src="../js/api.js"></script>
 <script src="../js/format.js"></script>
-<script src="../js/guard.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/theme.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/metrics.js"></script>
 <script src="../js/billing.js"></script>
 </body>
 </html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1>Notifications</h1>
+            <p class="page-subtitle">Stay up to date with clinic activity and internal messages.</p>
+        </div>
+        <div class="page-header-actions">
+            <button type="button" class="btn btn-secondary" id="markAllReadBtn">Mark all as read</button>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <select id="filterType">
+            <option value="">All</option>
+            <option value="SYSTEM">System</option>
+            <option value="MESSAGE">Messages</option>
+        </select>
+        <select id="filterStatus">
+            <option value="">All</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+        </select>
+        <select id="filterDate">
+            <option value="">All time</option>
+            <option value="today">Today</option>
+            <option value="week">This week</option>
+            <option value="older">Older</option>
+        </select>
+    </div>
+
+    <div class="card">
+        <div id="notifPageListContainer"><div class="loading-inline"><span class="spinner"></span> Loading notifications...</div></div>
+    </div>
+</template>
+
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/notifications-page.js"></script>
+</body>
+</html>

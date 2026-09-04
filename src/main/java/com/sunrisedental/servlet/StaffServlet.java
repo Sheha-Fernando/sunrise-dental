@@ -24,12 +24,15 @@ import java.util.logging.Logger;
 /**
  * Admin-only staff account management:
  *   GET  /api/staff              - list all staff accounts
- *   POST /api/staff              - create a staff account
- *   PUT  /api/staff/{id}         - update role/dentistId and/or active status
- *                                  (?role=..&dentistId=..&active=.. as query params -
- *                                  PUT bodies aren't auto-parsed as form params by
- *                                  the Servlet API, so this test API takes them on
- *                                  the query string, same as /api/bills does today)
+ *   POST /api/staff              - create a staff account (a DENTIST account
+ *                                  always creates its own new dentists row)
+ *   PUT  /api/staff/{id}         - three independent update modes, selected by
+ *                                  which params are present (all as query
+ *                                  params - PUT bodies aren't auto-parsed as
+ *                                  form params by the Servlet API):
+ *                                    ?fullName=..&username=..&...   - profile edit
+ *                                    ?role=..&dentistId=..          - change role
+ *                                    ?active=..                     - activate/deactivate
  */
 @WebServlet("/api/staff/*")
 public class StaffServlet extends HttpServlet {
@@ -66,15 +69,13 @@ public class StaffServlet extends HttpServlet {
         try {
             AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN);
 
-            String fullName = req.getParameter("fullName");
-            String username = req.getParameter("username");
-            String password = req.getParameter("password");
             UserRole role = UserRole.fromString(req.getParameter("role"));
-            String dentistIdParam = req.getParameter("dentistId");
-            Integer dentistId = (dentistIdParam == null || dentistIdParam.isBlank())
-                    ? null : Integer.valueOf(dentistIdParam);
+            Integer assignedDentistId = parseOptionalInt(req.getParameter("assignedDentistId"));
 
-            User created = staffService.createStaff(fullName, username, password, role, dentistId);
+            User created = staffService.createStaff(
+                    req.getParameter("fullName"), req.getParameter("username"), req.getParameter("password"), role,
+                    req.getParameter("contactNumber"), req.getParameter("email"),
+                    req.getParameter("specialty"), req.getParameter("workingDays"), assignedDentistId);
 
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("status", "success");
@@ -112,19 +113,26 @@ public class StaffServlet extends HttpServlet {
                 throw new BusinessException("Invalid staff member ID.");
             }
 
+            String fullNamePart = req.getParameter("fullName");
             String rolePart = req.getParameter("role");
             String activePart = req.getParameter("active");
-            if (rolePart == null && activePart == null) {
+            if (fullNamePart == null && rolePart == null && activePart == null) {
                 throw new BusinessException("Nothing to update.");
             }
 
             User updated = null;
+            if (fullNamePart != null) {
+                Integer assignedDentistId = parseOptionalInt(req.getParameter("assignedDentistId"));
+                updated = staffService.updateProfile(userId,
+                        fullNamePart, req.getParameter("username"), req.getParameter("password"),
+                        req.getParameter("contactNumber"), req.getParameter("email"),
+                        req.getParameter("specialty"), req.getParameter("workingDays"), assignedDentistId);
+            }
             if (rolePart != null) {
                 UserRole role = UserRole.fromString(rolePart);
-                String dentistIdParam = req.getParameter("dentistId");
-                Integer dentistId = (dentistIdParam == null || dentistIdParam.isBlank())
-                        ? null : Integer.valueOf(dentistIdParam);
-                updated = staffService.updateRole(userId, role, dentistId);
+                Integer dentistId = parseOptionalInt(req.getParameter("dentistId"));
+                Integer assignedDentistId = parseOptionalInt(req.getParameter("assignedDentistId"));
+                updated = staffService.updateRole(userId, role, dentistId, assignedDentistId);
             }
             if (activePart != null) {
                 updated = staffService.updateActiveStatus(userId, Boolean.parseBoolean(activePart));
@@ -148,13 +156,20 @@ public class StaffServlet extends HttpServlet {
         }
     }
 
+    private Integer parseOptionalInt(String value) {
+        return (value == null || value.isBlank()) ? null : Integer.valueOf(value);
+    }
+
     private Map<String, Object> toJson(User user) {
         Map<String, Object> json = new LinkedHashMap<>();
         json.put("userId", user.getUserId());
         json.put("username", user.getUsername());
         json.put("fullName", user.getFullName());
+        json.put("contactNumber", user.getContactNumber());
+        json.put("email", user.getEmail());
         json.put("role", user.getRole().name());
         json.put("dentistId", user.getDentistId());
+        json.put("assignedDentistId", user.getAssignedDentistId());
         json.put("active", user.isActive());
         return json;
     }

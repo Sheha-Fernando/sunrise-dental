@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Sunrise Dental</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<script>window.PAGE_ROLES = ["ADMIN", "RECEPTIONIST", "BILLING", "DENTIST"];</script>
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1>Reports</h1>
+            <p class="page-subtitle">Clinic activity and revenue at a glance.</p>
+        </div>
+        <div class="page-header-actions no-print">
+            <button type="button" class="btn btn-secondary" id="printReportBtn">Print / Export Report</button>
+        </div>
+    </div>
+
+    <div class="toolbar no-print">
+        <div class="segmented" id="rangeSegmented" role="group" aria-label="Report date range">
+            <button type="button" data-range="today" class="active">Today</button>
+            <button type="button" data-range="week">This week</button>
+            <button type="button" data-range="month">This month</button>
+            <button type="button" data-range="custom">Custom range</button>
+        </div>
+        <div id="customRangeFields" class="custom-range-fields" style="display:none;">
+            <label for="reportFromDate">From</label>
+            <input type="date" id="reportFromDate" aria-label="Custom range from date">
+            <label for="reportToDate">To</label>
+            <input type="date" id="reportToDate" aria-label="Custom range to date">
+            <button type="button" class="btn btn-secondary btn-sm" id="applyCustomRangeBtn">Apply</button>
+        </div>
+    </div>
+    <p class="field-error" id="rangeError"></p>
+    <p class="page-subtitle" id="rangePeriodLabel" style="margin-top:-0.75rem;"></p>
+
+    <div id="reportBody">
+        <div class="card" style="margin-bottom:1.25rem;">
+            <h2 class="section-title">Executive Summary</h2>
+            <div id="summaryContainer" class="status-summary-row"></div>
+        </div>
+
+        <div class="chart-grid" id="overviewChartsGrid" style="margin-bottom:1.25rem;">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h2 class="section-title" style="border:none;margin:0;padding:0;">Appointment overview</h2>
+                    <span class="chart-card-caption" id="overviewCaption"></span>
+                </div>
+                <div class="chart-canvas-wrap" id="overviewChart-wrap"><div class="chart-skeleton"></div></div>
+                <div class="chart-legend" id="overviewChart-legend"></div>
+            </div>
+            <div class="chart-card" id="revenueTrendCard">
+                <div class="chart-card-header">
+                    <h2 class="section-title" style="border:none;margin:0;padding:0;">Revenue trend</h2>
+                    <span class="chart-card-caption" id="revenueTrendCaption"></span>
+                </div>
+                <div class="chart-canvas-wrap" id="revenueTrendChart-wrap"><div class="chart-skeleton"></div></div>
+                <div class="chart-legend" id="revenueTrendChart-legend"></div>
+            </div>
+        </div>
+
+        <div class="chart-grid single" id="statusChartGrid" style="margin-bottom:1.25rem;">
+            <div class="chart-card" style="max-width:420px;">
+                <div class="chart-card-header">
+                    <h2 class="section-title" style="border:none;margin:0;padding:0;">Appointment status</h2>
+                </div>
+                <div class="chart-canvas-wrap" id="statusChart-wrap" style="height:200px;"><div class="chart-skeleton" style="height:200px;"></div></div>
+                <div class="chart-legend" id="statusChart-legend"></div>
+            </div>
+        </div>
+
+        <div class="card" id="treatmentRevenueCard" style="margin-bottom:1.25rem;">
+            <h2 class="section-title">Revenue by treatment</h2>
+            <div id="treatmentRevenueContainer"><div class="loading-inline"><span class="spinner"></span> Loading report...</div></div>
+        </div>
+
+        <div class="card" id="dentistPerformanceCard" style="margin-bottom:1.25rem;">
+            <h2 class="section-title">Dentist performance</h2>
+            <div id="dentistPerformanceContainer"><div class="loading-inline"><span class="spinner"></span> Loading report...</div></div>
+        </div>
+
+        <div class="card" id="patientActivityCard" style="margin-bottom:1.25rem;">
+            <h2 class="section-title">Patient activity</h2>
+            <div id="patientActivityContainer" class="status-summary-row compact"></div>
+        </div>
+
+        <div class="card" id="dailyOperationalCard" style="margin-bottom:1.25rem;">
+            <h2 class="section-title" id="dailyOperationalTitle">Today's activity</h2>
+            <div id="dailyOperationalContainer" class="status-summary-row"></div>
+        </div>
+    </div>
+
+    <div class="card" id="reportErrorCard" style="display:none;">
+        <div class="empty-state">
+            <div class="empty-title">Unable to load this report</div>
+            <div class="empty-desc" id="reportErrorDesc"></div>
+            <button type="button" class="btn btn-secondary" id="reportRetryBtn" style="margin-top:0.9rem;">Retry</button>
+        </div>
+    </div>
+
+    <p class="page-subtitle" id="generatedAt" style="text-align:right;"></p>
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/theme.js"></script>
+<script src="../js/metrics.js"></script>
+<script src="../js/reports.js"></script>
+</body>
+</html>

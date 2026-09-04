@@ -19,7 +19,7 @@ import java.util.Map;
  * reachable by a logged-in session - the login/logout/session-check and
  * plain DB-health endpoints stay open.
  */
-@WebFilter(urlPatterns = {"/api/appointments/*", "/api/bills", "/api/dentists", "/api/treatments", "/api/staff/*"})
+@WebFilter(urlPatterns = {"/api/appointments/*", "/api/bills", "/api/dentists", "/api/treatments/*", "/api/staff/*", "/api/patients/*", "/api/reports", "/api/notifications/*", "/api/profile/*"})
 public class AuthFilter implements Filter {
 
     @Override

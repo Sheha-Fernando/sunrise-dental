@@ -6,11 +6,14 @@ import com.sunrisedental.dao.TreatmentDAO;
 import com.sunrisedental.exception.BusinessException;
 import com.sunrisedental.model.Appointment;
 import com.sunrisedental.model.Bill;
+import com.sunrisedental.model.BillSummary;
 import com.sunrisedental.model.Treatment;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,6 +25,7 @@ public class BillingService {
     private final AppointmentDAO appointmentDAO;
     private final TreatmentDAO treatmentDAO;
     private final BillDAO billDAO;
+    private final NotificationService notificationService = new NotificationService();
 
     public BillingService() {
         this(new AppointmentDAO(), new TreatmentDAO(), new BillDAO());
@@ -39,6 +43,10 @@ public class BillingService {
      * own treatment - both read from the database, never hard-coded.
      */
     public Bill generateBill(String appointmentNumber) {
+        return generateBill(appointmentNumber, null);
+    }
+
+    public Bill generateBill(String appointmentNumber, Integer actingUserId) {
         try {
             Appointment appointment = appointmentDAO.findByAppointmentNumber(appointmentNumber)
                     .orElseThrow(() -> new BusinessException("Appointment not found."));
@@ -66,11 +74,31 @@ public class BillingService {
                 throw new BusinessException("A bill has already been generated for this appointment.");
             }
 
-            return billDAO.findByAppointmentId(appointment.getAppointmentId())
+            Bill created = billDAO.findByAppointmentId(appointment.getAppointmentId())
                     .orElseThrow(() -> new BusinessException("Unable to generate bill."));
+            notificationService.notifyBillGenerated(created, appointment.getPatient().getPatientName(), actingUserId);
+            return created;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Failed to generate bill", e);
             throw new BusinessException("Unable to generate bill.");
+        }
+    }
+
+    public List<BillSummary> listRecentBills(int limit) {
+        try {
+            return billDAO.findRecent(limit);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Failed to list recent bills", e);
+            throw new BusinessException("Unable to retrieve bills right now.");
+        }
+    }
+
+    public BigDecimal todaysRevenue() {
+        try {
+            return billDAO.sumTotalForDate(LocalDate.now());
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Failed to compute today's revenue", e);
+            throw new BusinessException("Unable to retrieve revenue right now.");
         }
     }
 

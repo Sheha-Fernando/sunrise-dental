@@ -1,7 +1,33 @@
 /* Sunrise Dental - print-only rules for the bill receipt */
 
+/* Hidden on screen; the formal receipt only ever appears in the print output -
+   the on-screen confirmation is the compact appointment summary row instead. */
+.print-only {
+    display: none;
+}
+
+@page {
+    size: A4;
+    margin: 15mm;
+}
+
 @media print {
+    .print-only {
+        display: block;
+    }
+
     .no-print {
+        display: none !important;
+    }
+
+    /* The sidebar/topbar are rendered by shell.js outside the Billing page's
+       own template (into #appShell, a sibling of .page-content), so no
+       .no-print class on the page itself ever reaches them - without this,
+       the full nav shell prints alongside the receipt and pushes it onto a
+       second page. Toasts are likewise appended straight to <body>. */
+    .sidebar,
+    .topbar,
+    .toast-stack {
         display: none !important;
     }
 
@@ -9,7 +35,7 @@
         background: #fff;
     }
 
-    .page-container {
+    .page-content {
         max-width: none;
         padding: 0;
         margin: 0;
@@ -24,5 +50,8 @@
     .receipt {
         border: none;
         padding: 0;
+        margin-top: 0;
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
 }

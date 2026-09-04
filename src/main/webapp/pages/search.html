@@ -3,30 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find Appointment - Sunrise Dental</title>
+    <title>Appointment Details - Sunrise Dental</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 
-<header class="app-header">
-    <div class="brand">
-        <span class="brand-name">SUNRISE DENTAL</span>
-        <span class="brand-tagline">Clinic Management System</span>
-    </div>
-    <div class="staff-info">
-        <span>Staff: <strong id="staffName">...</strong></span>
-        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
-    </div>
-</header>
+<div id="appShell"></div>
 
-<main class="page-container narrow">
+<template id="pageTemplate">
     <div class="page-header">
-        <a class="back-link" href="dashboard.html">&larr; Back to Dashboard</a>
-        <h1>Find Appointment</h1>
-        <p>Search by appointment number.</p>
+        <div>
+            <a class="back-link" href="appointments.html">&larr; Back to Appointments</a>
+            <h1>Appointment Details</h1>
+            <p class="page-subtitle">Search by appointment number.</p>
+        </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="lookupCard">
         <form id="searchForm" novalidate>
             <div class="form-group">
                 <label for="appointmentNumber">Appointment Number</label>
@@ -37,16 +30,17 @@
         </form>
     </div>
 
-    <div id="searchAlert" class="alert alert-error" role="alert"></div>
+    <div id="searchAlert" class="alert alert-error" role="alert" style="margin-top:1rem;"></div>
 
-    <div id="resultCard" class="card" style="display:none;">
-        <h2 class="section-title">Appointment Details</h2>
-        <p>
-            Appointment # <strong id="resultNumber"></strong>
-            &nbsp;<span id="resultStatus"></span>
-        </p>
+    <div id="resultCard" class="card" style="display:none; margin-top:1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <h2 class="section-title" style="border:none; padding:0; margin:0;">
+                Appointment # <span id="resultNumber"></span>
+            </h2>
+            <span id="resultStatus"></span>
+        </div>
 
-        <div class="detail-grid">
+        <div class="detail-grid" style="margin-top:1.25rem;">
             <div class="detail-item">
                 <div class="detail-label">Patient</div>
                 <div class="detail-value" id="resultPatient"></div>
@@ -75,18 +69,25 @@
                 <div class="detail-label">Time</div>
                 <div class="detail-value" id="resultTime"></div>
             </div>
+            <div class="detail-item" id="resultReasonGroup" style="grid-column: 1 / -1; display:none;">
+                <div class="detail-label">Cancellation Reason</div>
+                <div class="detail-value" id="resultReason"></div>
+            </div>
         </div>
 
+        <div class="btn-row" id="resultActions" style="flex-wrap:wrap;"></div>
+
         <div class="btn-row">
-            <a href="dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
-            <button type="button" class="btn btn-primary" id="generateBillBtn">Generate Bill</button>
+            <a href="appointments.html" class="btn btn-secondary">Back to Appointments</a>
         </div>
     </div>
-</main>
+</template>
 
 <script src="../js/api.js"></script>
 <script src="../js/format.js"></script>
-<script src="../js/guard.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/appointment-actions.js"></script>
 <script src="../js/search.js"></script>
 </body>
 </html>

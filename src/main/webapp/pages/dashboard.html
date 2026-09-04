@@ -8,46 +8,72 @@
 </head>
 <body>
 
-<header class="app-header">
-    <div class="brand">
-        <span class="brand-name">SUNRISE DENTAL</span>
-        <span class="brand-tagline">Clinic Management System</span>
+<div id="appShell"></div>
+
+<template id="pageTemplate">
+    <div class="page-header">
+        <div>
+            <h1 id="greeting">Welcome back</h1>
+            <p class="page-subtitle" id="dateLine"></p>
+        </div>
     </div>
-    <div class="staff-info">
-        <span>Staff: <strong id="staffName">...</strong></span>
-        <button type="button" class="btn btn-secondary" id="logoutBtn">Logout</button>
+
+    <div class="summary-grid" id="summaryGridRow" style="display:none; margin-bottom:1.25rem;">
+        <div class="card" id="statusSummaryCard">
+            <h2 class="section-title">Appointment Status Summary</h2>
+            <div id="statusSummaryContainer" class="status-summary-row"></div>
+        </div>
+
+        <div class="card" id="clinicOverviewCard">
+            <h2 class="section-title">Clinic Overview</h2>
+            <div id="clinicOverviewContainer" class="status-summary-row"></div>
+        </div>
     </div>
-</header>
 
-<main class="page-container">
-    <h1>Welcome back</h1>
-    <p>Manage today's appointments and patient visits.</p>
+    <div class="card" id="statCardsCard" style="margin-bottom:1.25rem;">
+        <div id="statCards" class="status-summary-row"></div>
+    </div>
 
-    <nav class="menu-grid" aria-label="Main menu">
-        <a class="menu-card" href="appointment.html">
-            <span class="menu-icon" aria-hidden="true">📅</span>
-            <span class="menu-title">New Appointment</span>
-            <span class="menu-desc">Register a patient visit</span>
-        </a>
-        <a class="menu-card" href="search.html">
-            <span class="menu-icon" aria-hidden="true">🔎</span>
-            <span class="menu-title">Find Appointment</span>
-            <span class="menu-desc">Search by appointment number</span>
-        </a>
-        <a class="menu-card" href="billing.html">
-            <span class="menu-icon" aria-hidden="true">🧾</span>
-            <span class="menu-title">Billing</span>
-            <span class="menu-desc">Generate and print a bill</span>
-        </a>
-        <a class="menu-card" href="help.html">
-            <span class="menu-icon" aria-hidden="true">❓</span>
-            <span class="menu-title">Help</span>
-            <span class="menu-desc">Step-by-step instructions</span>
-        </a>
-    </nav>
-</main>
+    <div id="chartsSection" style="display:none;"></div>
 
+    <div class="card" style="margin-top:1rem;">
+        <h2 class="section-title" id="scheduleTitle">Today's Schedule</h2>
+        <div id="scheduleContainer"><div class="loading-inline"><span class="spinner"></span> Loading schedule...</div></div>
+    </div>
+
+    <div class="card" id="secondaryCard" style="margin-top:1rem; display:none;">
+        <h2 class="section-title" id="secondaryTitle"></h2>
+        <div id="secondaryContainer"></div>
+    </div>
+
+    <div class="card" id="activityCard" style="margin-top:1rem; display:none;">
+        <h2 class="section-title">Today's Clinic Activity</h2>
+        <div id="activityContainer" class="activity-feed"></div>
+    </div>
+
+    <div class="card" style="margin-top:1rem;">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="card-row" id="quickActions"></div>
+    </div>
+
+    <!-- Dentist-only redesigned dashboard. Hidden/empty for every other role -
+         loadDentistDashboard() removes the generic blocks above and fills
+         this in instead, so no other role's rendering path touches it. -->
+    <div id="dentistDashboard" class="dentist-dashboard" style="display:none;"></div>
+
+    <!-- Clinical Assistant-only redesigned dashboard. Hidden/empty for every
+         other role - loadClinicalAssistantDashboard() removes the generic
+         blocks above and fills this in instead. -->
+    <div id="clinicalAssistantDashboard" class="clinical-assistant-dashboard" style="display:none;"></div>
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="../js/api.js"></script>
-<script src="../js/guard.js"></script>
+<script src="../js/format.js"></script>
+<script src="../js/shell.js"></script>
+<script src="../js/theme.js"></script>
+<script src="../js/metrics.js"></script>
+<script src="../js/toast.js"></script>
+<script src="../js/dashboard.js"></script>
 </body>
 </html>

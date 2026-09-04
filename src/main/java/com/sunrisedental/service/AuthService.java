@@ -42,7 +42,8 @@ public class AuthService {
             if (found.isEmpty()
                     || !found.get().isActive()
                     || !PasswordUtil.verify(plainPassword, found.get().getPasswordHash())
-                    || (found.get().getRole() == UserRole.DENTIST && found.get().getDentistId() == null)) {
+                    || (found.get().getRole() == UserRole.DENTIST && found.get().getDentistId() == null)
+                    || (found.get().getRole() == UserRole.CLINICAL_ASSISTANT && found.get().getAssignedDentistId() == null)) {
                 throw new BusinessException("Invalid username or password.");
             }
 

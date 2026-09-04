@@ -8,8 +8,11 @@ public class User {
     private String username;
     private String passwordHash;
     private String fullName;
+    private String contactNumber;
+    private String email;
     private UserRole role;
     private Integer dentistId;
+    private Integer assignedDentistId;
     private boolean active;
     private LocalDateTime createdAt;
 
@@ -45,6 +48,22 @@ public class User {
         this.fullName = fullName;
     }
 
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public UserRole getRole() {
         return role;
     }
@@ -59,6 +78,14 @@ public class User {
 
     public void setDentistId(Integer dentistId) {
         this.dentistId = dentistId;
+    }
+
+    public Integer getAssignedDentistId() {
+        return assignedDentistId;
+    }
+
+    public void setAssignedDentistId(Integer assignedDentistId) {
+        this.assignedDentistId = assignedDentistId;
     }
 
     public boolean isActive() {
