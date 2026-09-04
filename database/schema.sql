@@ -1,0 +1,2 @@
+-- Sunrise Dental Database Schema
+-- Database structure will be added in the database setup stage.

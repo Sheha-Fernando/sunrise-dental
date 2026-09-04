@@ -1,0 +1,5 @@
+target/
+.idea/
+.smarttomcat/
+*.class
+db.properties

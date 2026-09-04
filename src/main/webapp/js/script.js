@@ -1,0 +1,1 @@
+console.log("Sunrise Dental application loaded.");

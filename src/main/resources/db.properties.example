@@ -1,0 +1,7 @@
+# Copy this file to db.properties and fill in your local MySQL credentials.
+# db.properties is gitignored and must never be committed.
+db.host=localhost
+db.port=3306
+db.name=sunrise_dental
+db.user=root
+db.password=
