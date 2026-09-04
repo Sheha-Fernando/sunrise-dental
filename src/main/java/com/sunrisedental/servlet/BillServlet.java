@@ -1,8 +1,11 @@
 package com.sunrisedental.servlet;
 
 import com.sunrisedental.exception.BusinessException;
+import com.sunrisedental.exception.ForbiddenException;
 import com.sunrisedental.model.Bill;
+import com.sunrisedental.model.UserRole;
 import com.sunrisedental.service.BillingService;
+import com.sunrisedental.util.AuthorizationUtil;
 import com.sunrisedental.util.JsonUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -33,6 +36,8 @@ public class BillServlet extends HttpServlet {
         resp.setContentType("application/json");
         String appointmentNumber = req.getParameter("appointmentNumber");
         try {
+            AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST, UserRole.BILLING);
+
             if (appointmentNumber == null || appointmentNumber.isBlank()) {
                 throw new BusinessException("Appointment number is required.");
             }
@@ -43,6 +48,8 @@ public class BillServlet extends HttpServlet {
             body.put("bill", toJson(bill));
             resp.setStatus(HttpServletResponse.SC_CREATED);
             resp.getWriter().write(JsonUtil.write(body));
+        } catch (ForbiddenException e) {
+            writeError(resp, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         } catch (BusinessException e) {
             writeError(resp, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
@@ -57,6 +64,8 @@ public class BillServlet extends HttpServlet {
         resp.setContentType("application/json");
         String appointmentNumber = req.getParameter("appointmentNumber");
         try {
+            AuthorizationUtil.requireAnyRole(req, UserRole.ADMIN, UserRole.RECEPTIONIST, UserRole.BILLING);
+
             if (appointmentNumber == null || appointmentNumber.isBlank()) {
                 throw new BusinessException("Appointment number is required.");
             }
@@ -66,6 +75,8 @@ public class BillServlet extends HttpServlet {
             body.put("bill", toJson(bill));
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write(JsonUtil.write(body));
+        } catch (ForbiddenException e) {
+            writeError(resp, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         } catch (BusinessException e) {
             writeError(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (Exception e) {

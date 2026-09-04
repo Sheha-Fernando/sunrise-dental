@@ -8,6 +8,9 @@ public class User {
     private String username;
     private String passwordHash;
     private String fullName;
+    private UserRole role;
+    private Integer dentistId;
+    private boolean active;
     private LocalDateTime createdAt;
 
     public int getUserId() {
@@ -40,6 +43,30 @@ public class User {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+
+    public Integer getDentistId() {
+        return dentistId;
+    }
+
+    public void setDentistId(Integer dentistId) {
+        this.dentistId = dentistId;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public LocalDateTime getCreatedAt() {

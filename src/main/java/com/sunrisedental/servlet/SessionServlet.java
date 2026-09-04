@@ -1,5 +1,6 @@
 package com.sunrisedental.servlet;
 
+import com.sunrisedental.model.UserRole;
 import com.sunrisedental.util.JsonUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -34,6 +35,9 @@ public class SessionServlet extends HttpServlet {
         body.put("userId", session.getAttribute("userId"));
         body.put("username", session.getAttribute("username"));
         body.put("fullName", session.getAttribute("fullName"));
+        UserRole role = (UserRole) session.getAttribute("role");
+        body.put("role", role != null ? role.name() : null);
+        body.put("dentistId", session.getAttribute("dentistId"));
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.getWriter().write(JsonUtil.write(body));
     }

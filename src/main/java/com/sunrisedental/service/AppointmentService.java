@@ -6,10 +6,12 @@ import com.sunrisedental.dao.PatientDAO;
 import com.sunrisedental.dao.TreatmentDAO;
 import com.sunrisedental.db.DatabaseConfig;
 import com.sunrisedental.exception.BusinessException;
+import com.sunrisedental.exception.ForbiddenException;
 import com.sunrisedental.model.Appointment;
 import com.sunrisedental.model.Dentist;
 import com.sunrisedental.model.Patient;
 import com.sunrisedental.model.Treatment;
+import com.sunrisedental.model.UserRole;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -63,6 +65,21 @@ public class AppointmentService {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Failed to check dentist availability", e);
             throw new BusinessException("Unable to check dentist availability right now.");
+        }
+    }
+
+    /**
+     * A DENTIST user may only access appointments assigned to their own
+     * dentist record - never another dentist's patients. Every other role
+     * granted access to this endpoint (ADMIN/RECEPTIONIST/BILLING per the
+     * authorization matrix) passes through unrestricted.
+     */
+    public void verifyDentistOwnership(Appointment appointment, UserRole role, Integer sessionDentistId) {
+        if (role != UserRole.DENTIST) {
+            return;
+        }
+        if (sessionDentistId == null || appointment.getDentist().getDentistId() != sessionDentistId) {
+            throw new ForbiddenException("You are not authorized to access this appointment.");
         }
     }
 
